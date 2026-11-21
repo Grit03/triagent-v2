@@ -3,12 +3,20 @@ package io.triagent.analysis;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.anthropic.client.AnthropicClient;
+import com.anthropic.models.beta.messages.BetaContentBlockParam;
 import com.anthropic.models.beta.messages.BetaMessage;
 import com.anthropic.models.beta.messages.BetaOutputConfig;
 import com.anthropic.models.beta.messages.BetaStopReason;
+import com.anthropic.models.beta.messages.BetaToolResultBlockParam;
+import com.anthropic.models.beta.messages.BetaToolUseBlock;
 import com.anthropic.models.beta.messages.MessageCreateParams;
 
+import io.triagent.action.ActionService;
+import io.triagent.action.CreateActionRequest;
 import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import io.triagent.investigation.IncidentAnalyzer;
@@ -33,18 +41,30 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 
 			근거에 없는 사실을 지어내지 마세요. 근거가 부족하면 그렇다고 말하세요.""";
 
+	/** 도구 호출이 끝없이 이어지지 않도록 요청 횟수를 제한합니다. */
+	static final int MAX_TURNS = 4;
+
+	/** 에이전트가 요청한 조치의 요청자. 사람이 아니므로 F9 규칙상 누구든 담당 팀원이 승인할 수 있습니다. */
+	static final String AGENT_ACTOR = "triagent-agent";
+
+	private static final Logger log = LoggerFactory.getLogger(ClaudeIncidentAnalyzer.class);
+
 	private final AnthropicClient client;
 
 	private final AnthropicProperties properties;
 
-	public ClaudeIncidentAnalyzer(AnthropicClient client, AnthropicProperties properties) {
+	private final ActionService actionService;
+
+	public ClaudeIncidentAnalyzer(AnthropicClient client, AnthropicProperties properties,
+			ActionService actionService) {
 		this.client = client;
 		this.properties = properties;
+		this.actionService = actionService;
 	}
 
 	@Override
 	public String analyze(IncidentSnapshot incident, List<Evidence> evidences) {
-		MessageCreateParams params = MessageCreateParams.builder()
+		MessageCreateParams.Builder request = MessageCreateParams.builder()
 				.model(properties.model())
 				.maxTokens(properties.maxTokens())
 				.system(SYSTEM_PROMPT)
@@ -53,13 +73,47 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 						.build())
 				.addBeta(FALLBACK_BETA)
 				.fallbacksDefault()
-				.addUserMessage(userMessage(incident, evidences))
-				.build();
+				.addTool(ProposeRemediation.class)
+				.addUserMessage(userMessage(incident, evidences));
 
-		BetaMessage response = client.beta().messages().create(params);
-		if (response.stopReason().filter(BetaStopReason.REFUSAL::equals).isPresent()) {
-			throw new IllegalStateException("Claude declined to analyze the incident");
+		// 도구 호출 루프: 모델이 도구를 부르면(stop_reason=tool_use) 결과를 돌려주고 다시 요청합니다.
+		for (int turn = 1; turn <= MAX_TURNS; turn++) {
+			BetaMessage response = client.beta().messages().create(request.build());
+			if (response.stopReason().filter(BetaStopReason.REFUSAL::equals).isPresent()) {
+				throw new IllegalStateException("Claude declined to analyze the incident");
+			}
+			if (response.stopReason().filter(BetaStopReason.TOOL_USE::equals).isEmpty()) {
+				return finalText(response);
+			}
+			List<BetaContentBlockParam> toolResults = response.content().stream()
+					.flatMap(block -> block.toolUse().stream())
+					.map(toolUse -> BetaContentBlockParam.ofToolResult(runTool(incident, toolUse)))
+					.toList();
+			request.addMessage(response).addUserMessageOfContentBlockParams(toolResults);
 		}
+		throw new IllegalStateException("Claude did not finish within " + MAX_TURNS + " turns");
+	}
+
+	/**
+	 * 도구 실행 = 승인 대기 조치 요청. 실패해도 예외를 던지지 않고 오류 결과를 모델에게 돌려줘, 모델이 분석을 마칠 수 있게 합니다.
+	 */
+	private BetaToolResultBlockParam runTool(IncidentSnapshot incident, BetaToolUseBlock toolUse) {
+		BetaToolResultBlockParam.Builder result = BetaToolResultBlockParam.builder().toolUseId(toolUse.id());
+		try {
+			ProposeRemediation proposal = toolUse.input(ProposeRemediation.class);
+			Long actionId = actionService.request(incident.id(),
+					new CreateActionRequest(proposal.type, AGENT_ACTOR, proposal.reason)).id();
+			log.info("Agent proposed action: incidentId={}, actionId={}, type={}", incident.id(), actionId,
+					proposal.type);
+			return result.content("조치 %d로 승인 대기 요청을 등록했습니다. 아직 실행되지 않았습니다.".formatted(actionId)).build();
+		}
+		catch (RuntimeException ex) {
+			log.warn("Agent tool call failed: incidentId={}, tool={}", incident.id(), toolUse.name(), ex);
+			return result.content("조치 요청에 실패했습니다: " + ex.getMessage()).isError(true).build();
+		}
+	}
+
+	private static String finalText(BetaMessage response) {
 		String text = response.content().stream()
 				.flatMap(block -> block.text().stream())
 				.map(textBlock -> textBlock.text())
