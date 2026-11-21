@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: triagent
+
+# Actuator: 기본으로 health 엔드포인트만 웹에 노출됩니다.
+# https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.exposing
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true # Kubernetes liveness/readiness 프로브용 /actuator/health/{liveness,readiness}
