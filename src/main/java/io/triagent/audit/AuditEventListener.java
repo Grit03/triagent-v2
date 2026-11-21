@@ -1,0 +1,78 @@
+package io.triagent.audit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+import io.triagent.action.ActionRequestedEvent;
+import io.triagent.action.ActionResponse;
+import io.triagent.action.ActionService;
+import io.triagent.incident.IncidentOpenedEvent;
+import io.triagent.incident.IncidentResolvedEvent;
+import io.triagent.incident.IncidentService;
+
+/**
+ * 다른 패키지가 발행한 이벤트를 받아 감사 로그로 남깁니다. 업무 코드는 감사 로그의 존재를 모릅니다.
+ * <p>
+ * 커밋된 일만 기록하도록 AFTER_COMMIT(기본값)에서 실행합니다. 같은 스레드에서 동기로 실행되므로 기록이 끝난 뒤 요청이 끝납니다.
+ * 이미 커밋된 업무를 감사 로그 실패 때문에 오류로 응답하지 않도록, 기록 실패는 에러 로그로 남깁니다.
+ */
+@Component
+public class AuditEventListener {
+
+	private static final Logger log = LoggerFactory.getLogger(AuditEventListener.class);
+
+	/** Alertmanager 웹훅으로 일어난 일의 행위자 */
+	static final String ALERTMANAGER = "alertmanager";
+
+	private final AuditLogService auditLogService;
+
+	private final IncidentService incidentService;
+
+	private final ActionService actionService;
+
+	public AuditEventListener(AuditLogService auditLogService, IncidentService incidentService,
+			ActionService actionService) {
+		this.auditLogService = auditLogService;
+		this.incidentService = incidentService;
+		this.actionService = actionService;
+	}
+
+	@TransactionalEventListener
+	public void onIncidentOpened(IncidentOpenedEvent event) {
+		recordSafely(() -> {
+			String detail = incidentService.findSnapshot(event.incidentId())
+					.map(incident -> "%s (%s, %s)".formatted(incident.alertName(), incident.service(),
+							incident.severity()))
+					.orElse(null);
+			auditLogService.record(ALERTMANAGER, AuditEventType.INCIDENT_OPENED, event.incidentId(), null, detail);
+		});
+	}
+
+	@TransactionalEventListener
+	public void onIncidentResolved(IncidentResolvedEvent event) {
+		recordSafely(() -> {
+			auditLogService.record(ALERTMANAGER, AuditEventType.INCIDENT_RESOLVED, event.incidentId(), null, null);
+		});
+	}
+
+	@TransactionalEventListener
+	public void onActionRequested(ActionRequestedEvent event) {
+		recordSafely(() -> {
+			ActionResponse action = actionService.getAction(event.actionId());
+			String detail = "%s %s: %s".formatted(action.type(), action.service(), action.reason());
+			auditLogService.record(action.requestedBy(), AuditEventType.ACTION_REQUESTED, action.incidentId(),
+					action.id(), detail);
+		});
+	}
+
+	private void recordSafely(Runnable recording) {
+		try {
+			recording.run();
+		}
+		catch (RuntimeException ex) {
+			log.error("Failed to write audit log", ex);
+		}
+	}
+}

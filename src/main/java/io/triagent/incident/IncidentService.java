@@ -53,6 +53,7 @@ public class IncidentService {
 			// 변경 감지(dirty checking)로 커밋 시점에 UPDATE되므로 save()를 다시 부르지 않습니다.
 			incident.resolve(resolvedAt);
 			log.info("Incident resolved: id={}", incident.getId());
+			eventPublisher.publishEvent(new IncidentResolvedEvent(incident.getId()));
 			return incident.getId();
 		});
 	}
