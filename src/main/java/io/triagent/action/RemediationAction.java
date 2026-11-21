@@ -20,6 +20,8 @@ import jakarta.persistence.Table;
 @Table(name = "remediation_action")
 public class RemediationAction {
 
+	private static final int MAX_RESULT_LENGTH = 1000;
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -48,6 +50,16 @@ public class RemediationAction {
 	@Column(nullable = false)
 	private Instant requestedAt;
 
+	private String decidedBy;
+
+	private Instant decidedAt;
+
+	/** 실행 결과 메시지(성공 시 실행 내용, 실패 시 실패 사유) */
+	@Column(length = MAX_RESULT_LENGTH)
+	private String result;
+
+	private Instant finishedAt;
+
 
 	protected RemediationAction() {
 	}
@@ -66,6 +78,42 @@ public class RemediationAction {
 	public static RemediationAction request(Long incidentId, String service, ActionType type, String reason,
 			String requestedBy, Instant requestedAt) {
 		return new RemediationAction(incidentId, service, type, reason, requestedBy, requestedAt);
+	}
+
+	public void approve(String approver, Instant decidedAt) {
+		decide(ActionStatus.APPROVED, approver, decidedAt);
+	}
+
+	public void reject(String rejecter, Instant decidedAt) {
+		decide(ActionStatus.REJECTED, rejecter, decidedAt);
+	}
+
+	public void markExecuted(String result, Instant finishedAt) {
+		finish(ActionStatus.EXECUTED, result, finishedAt);
+	}
+
+	public void markFailed(String reason, Instant finishedAt) {
+		finish(ActionStatus.FAILED, reason, finishedAt);
+	}
+
+	/** 승인과 거절은 승인 대기 상태에서 한 번만 할 수 있습니다. */
+	private void decide(ActionStatus decision, String decider, Instant decidedAt) {
+		if (status != ActionStatus.PENDING) {
+			throw new ActionAlreadyDecidedException(id, status);
+		}
+		this.status = decision;
+		this.decidedBy = decider;
+		this.decidedAt = decidedAt;
+	}
+
+	/** 실행 결과는 승인된 조치에만 기록할 수 있습니다. 승인 없이 실행된 기록이 남지 않게 합니다. */
+	private void finish(ActionStatus outcome, String result, Instant finishedAt) {
+		if (status != ActionStatus.APPROVED) {
+			throw new IllegalStateException("Action %d is %s, not APPROVED".formatted(id, status));
+		}
+		this.status = outcome;
+		this.result = result.length() <= MAX_RESULT_LENGTH ? result : result.substring(0, MAX_RESULT_LENGTH);
+		this.finishedAt = finishedAt;
 	}
 
 	public Long getId() {
@@ -98,5 +146,21 @@ public class RemediationAction {
 
 	public Instant getRequestedAt() {
 		return requestedAt;
+	}
+
+	public String getDecidedBy() {
+		return decidedBy;
+	}
+
+	public Instant getDecidedAt() {
+		return decidedAt;
+	}
+
+	public String getResult() {
+		return result;
+	}
+
+	public Instant getFinishedAt() {
+		return finishedAt;
 	}
 }
