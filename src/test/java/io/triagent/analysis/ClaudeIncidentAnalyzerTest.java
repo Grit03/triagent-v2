@@ -22,8 +22,7 @@ import com.anthropic.models.beta.messages.BetaStopReason;
 import com.anthropic.models.beta.messages.BetaTextBlock;
 import com.anthropic.models.beta.messages.MessageCreateParams;
 
-import io.triagent.incident.IncidentResponse;
-import io.triagent.incident.IncidentStatus;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 
 /**
@@ -31,8 +30,8 @@ import io.triagent.investigation.Evidence;
  */
 class ClaudeIncidentAnalyzerTest {
 
-	static final IncidentResponse INCIDENT = new IncidentResponse(1L, "HighErrorRate", "payment-api", "critical",
-			"5xx > 5%", IncidentStatus.OPEN, Instant.parse("2026-11-21T01:00:00Z"), null);
+	static final IncidentSnapshot INCIDENT = new IncidentSnapshot(1L, "HighErrorRate", "payment-api", "critical",
+			"5xx > 5%", Instant.parse("2026-11-21T01:00:00Z"));
 
 	AnthropicClient client = mock(AnthropicClient.class, RETURNS_DEEP_STUBS);
 

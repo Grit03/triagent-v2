@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
-import io.triagent.incident.Incident;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.integration.LabelValues;
 import io.triagent.integration.loki.LokiClient.LogLine;
 import io.triagent.investigation.ContextCollector;
@@ -40,9 +40,9 @@ public class LokiLogCollector implements ContextCollector {
 	}
 
 	@Override
-	public Evidence collect(Incident incident) {
-		String logQl = properties.query().formatted(LabelValues.escape(incident.getService()));
-		Instant start = incident.getStartedAt().minus(properties.lookback());
+	public Evidence collect(IncidentSnapshot incident) {
+		String logQl = properties.query().formatted(LabelValues.escape(incident.service()));
+		Instant start = incident.startedAt().minus(properties.lookback());
 		// 알림은 보통 문제가 생기고 조금 뒤에 오므로, 장애 시작 이후 로그도 지금까지 함께 봅니다.
 		Instant end = Instant.now();
 		List<LogLine> lines = lokiClient.queryRange(logQl, start, end, properties.limit());

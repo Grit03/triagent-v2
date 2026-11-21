@@ -13,7 +13,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import io.triagent.incident.Incident;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.integration.loki.LokiClient.LogLine;
 import io.triagent.investigation.Evidence;
 
@@ -46,7 +46,7 @@ class LokiLogCollectorTest {
 		assertThat(collector.collect(incident("payment-api")).content()).startsWith("에러 로그가 없습니다.");
 	}
 
-	private static Incident incident(String service) {
-		return Incident.open("fp", "HighErrorRate", service, "critical", null, STARTED_AT);
+	private static IncidentSnapshot incident(String service) {
+		return new IncidentSnapshot(1L, "HighErrorRate", service, "critical", null, STARTED_AT);
 	}
 }

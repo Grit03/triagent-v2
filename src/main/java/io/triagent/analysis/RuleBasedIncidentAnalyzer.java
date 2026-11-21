@@ -6,8 +6,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
-import io.triagent.incident.IncidentResponse;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
+import io.triagent.investigation.IncidentAnalyzer;
 
 /**
  * LLM을 쓸 수 없을 때(키 없음, 장애, 거절) 사용하는 규칙 기반 요약.
@@ -17,7 +18,7 @@ import io.triagent.investigation.Evidence;
 public class RuleBasedIncidentAnalyzer implements IncidentAnalyzer {
 
 	@Override
-	public String analyze(IncidentResponse incident, List<Evidence> evidences) {
+	public String analyze(IncidentSnapshot incident, List<Evidence> evidences) {
 		List<String> hints = new ArrayList<>();
 		for (Evidence evidence : evidences) {
 			if (!evidence.success()) {
