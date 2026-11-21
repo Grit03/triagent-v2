@@ -1,5 +1,6 @@
 package io.triagent.notification;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -37,14 +38,23 @@ class SlackNotifierTest {
 				.andExpect(method(HttpMethod.POST))
 				.andExpect(jsonPath("$.text").value("[CRITICAL] payment-api 장애 발생: HighErrorRate"))
 				.andExpect(jsonPath("$.blocks[0].type").value("header"))
-				.andExpect(jsonPath("$.blocks[2].text.text").value(containsString(":warning: `loki` 조회 실패")))
+				.andExpect(jsonPath("$.blocks[2].text.text").value("*분석*\n원인 후보: 최근 배포"))
+				.andExpect(jsonPath("$.blocks[3].text.text").value(containsString(":warning: `loki` 조회 실패")))
 				.andRespond(withSuccess());
 
 		notifier.send(new InvestigationReport(
 				new IncidentResponse(1L, "HighErrorRate", "payment-api", "critical", "5xx > 5%", IncidentStatus.OPEN,
 						Instant.parse("2026-11-21T01:00:00Z"), null),
-				List.of(Evidence.success("github", "최근 커밋 3건"), Evidence.failure("loki", "조회 실패: timeout"))));
+				List.of(Evidence.success("github", "최근 커밋 3건"), Evidence.failure("loki", "조회 실패: timeout")),
+				"원인 후보: 최근 배포"));
 
 		server.verify();
+	}
+
+	@Test
+	void truncatesLongSections() {
+		String truncated = SlackNotifier.truncate("a".repeat(5000));
+
+		assertThat(truncated).hasSize(2900 + "\n...(생략)".length());
 	}
 }

@@ -16,6 +16,7 @@ public class LoggingNotifier implements Notifier {
 
 	@Override
 	public void send(InvestigationReport report) {
-		log.info("Investigation report: incident={}, evidences={}", report.incident(), report.evidences());
+		log.info("Investigation report: incident={}, analysis={}, evidences={}", report.incident(), report.analysis(),
+				report.evidences());
 	}
 }

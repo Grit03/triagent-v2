@@ -23,6 +23,8 @@ import io.triagent.investigation.InvestigationReport;
 @ConditionalOnExpression("'${triagent.notification.slack.webhook-url:}' != ''")
 public class SlackNotifier implements Notifier {
 
+	private static final int MAX_SECTION_LENGTH = 2900;
+
 	private final RestClient restClient;
 
 	private final SlackProperties properties;
@@ -56,7 +58,13 @@ public class SlackNotifier implements Notifier {
 				Map.of("type", "header", "text", Map.of("type", "plain_text", "text", title)),
 				section("*요약*\n" + (incident.summary() != null ? incident.summary() : "-")
 						+ "\n*시작 시각* " + incident.startedAt() + "\n*장애 ID* " + incident.id()),
-				section("*조사 근거*\n" + evidenceText)));
+				section("*분석*\n" + truncate(report.analysis())),
+				section("*조사 근거*\n" + truncate(evidenceText))));
+	}
+
+	/** Slack section 블록의 text는 3,000자를 넘으면 전송이 실패하므로 여유 있게 자릅니다. */
+	static String truncate(String text) {
+		return text.length() <= MAX_SECTION_LENGTH ? text : text.substring(0, MAX_SECTION_LENGTH) + "\n...(생략)";
 	}
 
 	private static Map<String, Object> section(String markdown) {

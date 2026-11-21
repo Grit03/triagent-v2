@@ -15,6 +15,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import io.triagent.analysis.AnalysisService;
 import io.triagent.incident.Incident;
 import io.triagent.incident.IncidentRepository;
 import io.triagent.notification.Notifier;
@@ -36,13 +37,16 @@ class InvestigationServiceTest {
 
 	Notifier notifier = mock(Notifier.class);
 
+	AnalysisService analysisService = mock(AnalysisService.class);
+
 	InvestigationService service = new InvestigationService(incidentRepository,
-			List.of(okCollector, brokenCollector), List.of(failingNotifier, notifier));
+			List.of(okCollector, brokenCollector), analysisService, List.of(failingNotifier, notifier));
 
 	@Test
 	void collectsEvidenceAndKeepsGoingWhenToolsFail() {
 		given(incidentRepository.findById(1L)).willReturn(Optional.of(incident()));
 		willThrow(new IllegalStateException("slack down")).given(failingNotifier).send(any());
+		given(analysisService.analyze(any(), any())).willReturn("원인 후보: 최근 배포");
 
 		service.investigate(1L);
 
@@ -53,6 +57,7 @@ class InvestigationServiceTest {
 		assertThat(report.evidences()).containsExactly(
 				Evidence.success("github", "최근 커밋 3건"),
 				Evidence.failure("loki", "조회 실패: connection refused"));
+		assertThat(report.analysis()).isEqualTo("원인 후보: 최근 배포");
 	}
 
 	@Test
