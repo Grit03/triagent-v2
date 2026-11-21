@@ -1,6 +1,7 @@
 # 데모 Prometheus 설정. https://prometheus.io/docs/prometheus/latest/configuration/configuration/
 global:
   scrape_interval: 5s
+  evaluation_interval: 5s
 
 scrape_configs:
   - job_name: payment-api
@@ -10,3 +11,11 @@ scrape_configs:
         # Triagent는 알림의 service 라벨로 지표를 찾으므로 같은 라벨을 붙입니다.
         labels:
           service: payment-api
+
+rule_files:
+  - /etc/prometheus/alert-rules.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]

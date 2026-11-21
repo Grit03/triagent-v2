@@ -60,6 +60,7 @@ Compose에는 장애를 재현하기 위한 구성이 함께 들어 있습니다
 | `traffic` | 결제 요청을 0.2초마다 보내 지표와 로그가 쌓이게 합니다 | |
 | `prometheus` | `payment-api`의 지표를 `service="payment-api"` 라벨을 붙여 수집합니다 | http://localhost:9090 |
 | `loki` | `payment-api`가 보내는 로그를 같은 라벨로 저장합니다 | http://localhost:3100 |
+| `alertmanager` | Prometheus 알림을 Triagent 웹훅으로 전달합니다([알림 규칙](demo/alert-rules.yml)) | http://localhost:9093 |
 
 결제 요청의 절반이 실패하도록 장애를 일으킵니다. `rate=0`으로 다시 보내면 정상으로 돌아옵니다.
 
@@ -67,7 +68,22 @@ Compose에는 장애를 재현하기 위한 구성이 함께 들어 있습니다
 curl -X PUT "http://localhost:8081/chaos/error-rate?rate=0.5"
 ```
 
-1분쯤 지나 알림을 보내면, Triagent가 Prometheus에서 장애 30분 전과 현재의 에러율을, Loki에서 `Connection pool exhausted` 에러 로그를 근거로 모아 보고합니다. 스택을 띄운 지 30분이 안 됐다면 장애 전 값은 `데이터 없음`으로 나옵니다. Slack을 설정하지 않았다면 보고 내용은 `docker compose logs triagent`에서 볼 수 있습니다.
+그 뒤로는 사람이 알림을 보내지 않아도 아래 순서로 이어집니다. 괄호 안은 로컬에서 직접 잰 시간입니다.
+
+1. Prometheus가 최근 1분 에러율이 5%를 넘는 상태가 30초 이어진 것을 보고 `HighErrorRate` 알림을 냅니다.
+2. Alertmanager가 알림을 Triagent로 보내고, Triagent가 장애를 엽니다(장애를 일으킨 지 약 50초).
+3. Triagent가 Prometheus에서 장애 30분 전과 현재의 에러율을, Loki에서 `Connection pool exhausted` 에러 로그를 근거로 모아 보고합니다. 스택을 띄운 지 30분이 안 됐다면 장애 전 값은 `데이터 없음`으로 나옵니다.
+4. `rate=0`으로 되돌리면 Alertmanager가 해소 알림을 보내고, Triagent가 장애를 `RESOLVED`로 닫습니다(되돌린 지 약 90초).
+
+보고는 Slack을 설정했다면 Slack으로, 아니면 `docker compose logs triagent`에 남습니다. `ANTHROPIC_API_KEY`를 넣으면 Claude가 근거를 분석하고 조치를 제안합니다. 장애와 감사 로그는 API로 확인합니다.
+
+```bash
+curl http://localhost:8080/api/v1/incidents/1
+```
+
+```bash
+curl "http://localhost:8080/api/v1/audit-logs?incidentId=1"
+```
 
 ## 설정
 

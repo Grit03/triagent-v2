@@ -1,0 +1,15 @@
+# 데모 알림 규칙. https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+groups:
+  - name: payment-api
+    rules:
+      - alert: HighErrorRate
+        # 최근 1분간 5xx 응답 비율. 데모에서 빨리 반응하도록 짧은 구간을 씁니다.
+        expr: |
+          sum by (service) (rate(http_server_requests_seconds_count{service="payment-api",status=~"5.."}[1m]))
+            / sum by (service) (rate(http_server_requests_seconds_count{service="payment-api"}[1m])) > 0.05
+        # 잠깐 튀는 값으로 알림이 가지 않도록 30초 동안 조건이 유지돼야 보냅니다.
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "5xx error rate is above 5%"
