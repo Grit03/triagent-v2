@@ -30,6 +30,10 @@ services:
       SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
       SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # 데모는 비용을 줄이기 위해 작은 모델과 낮은 effort를 씁니다. 운영 기본값(application.yml)은 claude-opus-5-5입니다.
+      TRIAGENT_ANALYSIS_ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-haiku-5-5}
+      TRIAGENT_ANALYSIS_ANTHROPIC_EFFORT: ${ANTHROPIC_EFFORT:-low}
+      TRIAGENT_ANALYSIS_ANTHROPIC_MAX_TOKENS: ${ANTHROPIC_MAX_TOKENS:-4000}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       PROMETHEUS_URL: http://prometheus:9090
       LOKI_URL: http://loki:3100
