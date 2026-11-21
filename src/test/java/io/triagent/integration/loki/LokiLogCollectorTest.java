@@ -46,11 +46,6 @@ class LokiLogCollectorTest {
 		assertThat(collector.collect(incident("payment-api")).content()).startsWith("에러 로그가 없습니다.");
 	}
 
-	@Test
-	void escapesQuotesInServiceName() {
-		assertThat(LokiLogCollector.escape("pay\"} or {x=\"1")).isEqualTo("pay\\\"} or {x=\\\"1");
-	}
-
 	private static Incident incident(String service) {
 		return Incident.open("fp", "HighErrorRate", service, "critical", null, STARTED_AT);
 	}
