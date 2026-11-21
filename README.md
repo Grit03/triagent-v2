@@ -25,3 +25,9 @@ curl http://localhost:8080/actuator/health
 ```bash
 ./gradlew test
 ```
+
+## 설정
+
+| 환경 변수 | 설명 | 기본값 |
+| --- | --- | --- |
+| `SLACK_WEBHOOK_URL` | 조사 결과를 보낼 Slack Incoming Webhook URL. 비워 두면 로그로만 남깁니다. | (없음) |

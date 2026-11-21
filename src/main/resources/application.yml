@@ -5,6 +5,21 @@ spring:
     # 트랜잭션 밖(뷰 렌더링 시점)까지 DB 커넥션을 붙잡지 않도록 끕니다.
     # https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.jpa-and-spring-data.open-entity-manager-in-view
     open-in-view: false
+  task:
+    # @Async가 사용하는 스레드 풀(applicationTaskExecutor) 설정
+    # https://docs.spring.io/spring-boot/reference/features/task-execution-and-scheduling.html
+    execution:
+      thread-name-prefix: investigation-
+      pool:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 100
+
+triagent:
+  notification:
+    slack:
+      # Slack Incoming Webhook URL. 비워 두면 Slack 보고를 끄고 로그로만 남깁니다.
+      webhook-url: ${SLACK_WEBHOOK_URL:}
 
 # Actuator: 기본으로 health 엔드포인트만 웹에 노출됩니다.
 # https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.exposing

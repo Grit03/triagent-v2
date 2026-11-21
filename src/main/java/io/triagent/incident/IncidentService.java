@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +22,11 @@ public class IncidentService {
 
 	private final IncidentRepository incidentRepository;
 
-	public IncidentService(IncidentRepository incidentRepository) {
+	private final ApplicationEventPublisher eventPublisher;
+
+	public IncidentService(IncidentRepository incidentRepository, ApplicationEventPublisher eventPublisher) {
 		this.incidentRepository = incidentRepository;
+		this.eventPublisher = eventPublisher;
 	}
 
 	/**
@@ -66,6 +70,8 @@ public class IncidentService {
 		Long id = incidentRepository.save(incident).getId();
 		log.info("Incident opened: id={}, alert={}, service={}", id, incident.getAlertName(), incident.getService());
 		opened.add(id);
+		// 조사 시작은 이벤트로 알리기만 합니다. IncidentService는 누가 조사하는지 알 필요가 없습니다.
+		eventPublisher.publishEvent(new IncidentOpenedEvent(id));
 	}
 
 	private void resolveIfOpen(Alert alert, List<Long> resolved) {
