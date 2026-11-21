@@ -33,6 +33,13 @@ triagent:
     lookback: 24h
     # 장애 알림의 service 라벨 → GitHub 저장소(owner/repo)
     repositories: {}
+  loki:
+    # Loki 주소. 비워 두면 로그 수집을 끕니다. 예: http://localhost:3100
+    base-url: ${LOKI_URL:}
+    # %s 자리에 알림의 service 라벨 값이 들어갑니다(LogQL).
+    query: '{service="%s"} |~ "(?i)(error|exception)"'
+    lookback: 15m
+    limit: 20
 
 # Actuator: 기본으로 health 엔드포인트만 웹에 노출됩니다.
 # https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.exposing
@@ -45,10 +52,3 @@ management:
     health:
       probes:
         enabled: true # Kubernetes liveness/readiness 프로브용 /actuator/health/{liveness,readiness}
-  loki:
-    # Loki 주소. 비워 두면 로그 수집을 끕니다. 예: http://localhost:3100
-    base-url: ${LOKI_URL:}
-    # %s 자리에 알림의 service 라벨 값이 들어갑니다(LogQL).
-    query: '{service="%s"} |~ "(?i)(error|exception)"'
-    lookback: 15m
-    limit: 20
