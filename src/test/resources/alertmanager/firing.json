@@ -1,0 +1,18 @@
+{
+  "version": "4",
+  "groupKey": "{}:{alertname=\"HighErrorRate\"}",
+  "status": "firing",
+  "receiver": "triagent",
+  "commonLabels": { "alertname": "HighErrorRate", "service": "payment-api" },
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": { "alertname": "HighErrorRate", "service": "payment-api", "severity": "critical" },
+      "annotations": { "summary": "5xx error rate is above 5%" },
+      "startsAt": "2026-11-21T01:00:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://prometheus:9090/graph",
+      "fingerprint": "c8a1f2d3e4b5a6f7"
+    }
+  ]
+}
