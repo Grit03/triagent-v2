@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.triagent.incident.IncidentService;
 import jakarta.validation.Valid;
 
 /**
@@ -17,10 +16,10 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1/alerts")
 public class AlertWebhookController {
 
-	private final IncidentService incidentService;
+	private final AlertService alertService;
 
-	public AlertWebhookController(IncidentService incidentService) {
-		this.incidentService = incidentService;
+	public AlertWebhookController(AlertService alertService) {
+		this.alertService = alertService;
 	}
 
 	/**
@@ -29,6 +28,6 @@ public class AlertWebhookController {
 	@PostMapping("/alertmanager")
 	@ResponseStatus(HttpStatus.ACCEPTED)
 	public AlertReceiptResponse receive(@Valid @RequestBody AlertmanagerWebhookRequest request) {
-		return incidentService.handle(request);
+		return alertService.receive(request);
 	}
 }

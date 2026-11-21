@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
-import io.triagent.incident.Incident;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.integration.LabelValues;
 import io.triagent.investigation.ContextCollector;
 import io.triagent.investigation.Evidence;
@@ -44,12 +44,12 @@ public class PrometheusMetricCollector implements ContextCollector {
 	}
 
 	@Override
-	public Evidence collect(Incident incident) {
+	public Evidence collect(IncidentSnapshot incident) {
 		if (properties.queries().isEmpty()) {
 			return Evidence.failure(SOURCE, "설정된 지표 쿼리가 없습니다.");
 		}
-		String service = LabelValues.escape(incident.getService());
-		Instant baselineAt = incident.getStartedAt().minus(properties.lookback());
+		String service = LabelValues.escape(incident.service());
+		Instant baselineAt = incident.startedAt().minus(properties.lookback());
 		Instant now = Instant.now();
 		List<String> lines = new ArrayList<>();
 		for (Map.Entry<String, String> query : properties.queries().entrySet()) {

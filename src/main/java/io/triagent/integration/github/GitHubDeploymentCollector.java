@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
-import io.triagent.incident.Incident;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.ContextCollector;
 import io.triagent.investigation.Evidence;
 
@@ -34,12 +34,12 @@ public class GitHubDeploymentCollector implements ContextCollector {
 	}
 
 	@Override
-	public Evidence collect(Incident incident) {
-		String repository = properties.repositories().get(incident.getService());
+	public Evidence collect(IncidentSnapshot incident) {
+		String repository = properties.repositories().get(incident.service());
 		if (repository == null) {
-			return Evidence.failure(SOURCE, "서비스 '%s'에 연결된 저장소가 없습니다.".formatted(incident.getService()));
+			return Evidence.failure(SOURCE, "서비스 '%s'에 연결된 저장소가 없습니다.".formatted(incident.service()));
 		}
-		Instant until = incident.getStartedAt();
+		Instant until = incident.startedAt();
 		Instant since = until.minus(properties.lookback());
 		List<GitHubCommit> commits = gitHubClient.listCommits(repository, since, until);
 		long hours = properties.lookback().toHours();

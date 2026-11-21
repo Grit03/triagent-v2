@@ -15,17 +15,15 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import io.triagent.analysis.AnalysisService;
-import io.triagent.incident.Incident;
-import io.triagent.incident.IncidentRepository;
-import io.triagent.notification.Notifier;
+import io.triagent.incident.IncidentSnapshot;
+import io.triagent.incident.IncidentService;
 
 /**
  * Spring 컨텍스트 없이 Mockito로 협력 객체를 대신해, 워크플로 로직만 빠르게 검증합니다.
  */
 class InvestigationServiceTest {
 
-	IncidentRepository incidentRepository = mock(IncidentRepository.class);
+	IncidentService incidentService = mock(IncidentService.class);
 
 	ContextCollector okCollector = collector("github", () -> Evidence.success("github", "최근 커밋 3건"));
 
@@ -37,16 +35,16 @@ class InvestigationServiceTest {
 
 	Notifier notifier = mock(Notifier.class);
 
-	AnalysisService analysisService = mock(AnalysisService.class);
+	IncidentAnalyzer analyzer = mock(IncidentAnalyzer.class);
 
-	InvestigationService service = new InvestigationService(incidentRepository,
-			List.of(okCollector, brokenCollector), analysisService, List.of(failingNotifier, notifier));
+	InvestigationService service = new InvestigationService(incidentService,
+			List.of(okCollector, brokenCollector), analyzer, List.of(failingNotifier, notifier));
 
 	@Test
 	void collectsEvidenceAndKeepsGoingWhenToolsFail() {
-		given(incidentRepository.findById(1L)).willReturn(Optional.of(incident()));
+		given(incidentService.findSnapshot(1L)).willReturn(Optional.of(incident()));
 		willThrow(new IllegalStateException("slack down")).given(failingNotifier).send(any());
-		given(analysisService.analyze(any(), any())).willReturn("원인 후보: 최근 배포");
+		given(analyzer.analyze(any(), any())).willReturn("원인 후보: 최근 배포");
 
 		service.investigate(1L);
 
@@ -62,15 +60,15 @@ class InvestigationServiceTest {
 
 	@Test
 	void skipsWhenIncidentIsMissing() {
-		given(incidentRepository.findById(1L)).willReturn(Optional.empty());
+		given(incidentService.findSnapshot(1L)).willReturn(Optional.empty());
 
 		service.investigate(1L);
 
 		verify(notifier, never()).send(any());
 	}
 
-	private static Incident incident() {
-		return Incident.open("fp", "HighErrorRate", "payment-api", "critical", "5xx > 5%",
+	private static IncidentSnapshot incident() {
+		return new IncidentSnapshot(1L, "HighErrorRate", "payment-api", "critical", "5xx > 5%",
 				Instant.parse("2026-11-21T01:00:00Z"));
 	}
 
@@ -82,7 +80,7 @@ class InvestigationServiceTest {
 			}
 
 			@Override
-			public Evidence collect(Incident incident) {
+			public Evidence collect(IncidentSnapshot incident) {
 				return result.get();
 			}
 		};

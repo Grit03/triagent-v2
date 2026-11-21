@@ -11,14 +11,13 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import io.triagent.incident.IncidentResponse;
-import io.triagent.incident.IncidentStatus;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 
-class AnalysisServiceTest {
+class FallbackIncidentAnalyzerTest {
 
-	static final IncidentResponse INCIDENT = new IncidentResponse(1L, "HighErrorRate", "payment-api", "critical",
-			"5xx > 5%", IncidentStatus.OPEN, Instant.parse("2026-11-21T01:00:00Z"), null);
+	static final IncidentSnapshot INCIDENT = new IncidentSnapshot(1L, "HighErrorRate", "payment-api", "critical",
+			"5xx > 5%", Instant.parse("2026-11-21T01:00:00Z"));
 
 	static final List<Evidence> EVIDENCES = List.of(
 			Evidence.success("github", "acme/payment-api: 장애 전 24시간 동안 커밋 2건\n- a1b2c3d fix: 타임아웃"),
@@ -33,7 +32,7 @@ class AnalysisServiceTest {
 	void usesClaudeWhenAvailable() {
 		given(claude.analyze(any(), any())).willReturn("*원인 후보*: a1b2c3d 배포");
 
-		assertThat(new AnalysisService(Optional.of(claude), ruleBased).analyze(INCIDENT, EVIDENCES))
+		assertThat(new FallbackIncidentAnalyzer(Optional.of(claude), ruleBased).analyze(INCIDENT, EVIDENCES))
 				.isEqualTo("*원인 후보*: a1b2c3d 배포");
 	}
 
@@ -41,13 +40,13 @@ class AnalysisServiceTest {
 	void fallsBackToRulesWhenClaudeFails() {
 		given(claude.analyze(any(), any())).willThrow(new IllegalStateException("overloaded"));
 
-		assertThat(new AnalysisService(Optional.of(claude), ruleBased).analyze(INCIDENT, EVIDENCES))
+		assertThat(new FallbackIncidentAnalyzer(Optional.of(claude), ruleBased).analyze(INCIDENT, EVIDENCES))
 				.startsWith("(규칙 기반 요약)");
 	}
 
 	@Test
 	void rulesPointToRecentCommitsLogsAndFailures() {
-		assertThat(new AnalysisService(Optional.empty(), ruleBased).analyze(INCIDENT, EVIDENCES))
+		assertThat(new FallbackIncidentAnalyzer(Optional.empty(), ruleBased).analyze(INCIDENT, EVIDENCES))
 				.isEqualTo("(규칙 기반 요약) 장애 직전에 커밋이 있습니다. 최근 배포를 먼저 확인하세요. "
 						+ "에러 로그가 있습니다. 가장 최근 예외 메시지를 확인하세요. 조회에 실패한 근거가 있습니다: prometheus");
 	}

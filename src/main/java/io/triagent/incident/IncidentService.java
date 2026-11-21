@@ -1,18 +1,13 @@
 package io.triagent.incident;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import io.triagent.alert.AlertReceiptResponse;
-import io.triagent.alert.AlertmanagerWebhookRequest;
-import io.triagent.alert.AlertmanagerWebhookRequest.Alert;
 
 @Service
 @Transactional(readOnly = true)
@@ -30,21 +25,36 @@ public class IncidentService {
 	}
 
 	/**
-	 * 알림 묶음을 장애로 반영합니다. 한 요청 안의 알림은 하나의 트랜잭션으로 처리합니다.
+	 * 같은 fingerprint로 열린 장애가 없을 때만 새 장애를 엽니다.
+	 *
+	 * @return 새로 연 장애의 ID. 이미 열린 장애가 있으면 비어 있습니다.
 	 */
 	@Transactional
-	public AlertReceiptResponse handle(AlertmanagerWebhookRequest request) {
-		List<Long> opened = new ArrayList<>();
-		List<Long> resolved = new ArrayList<>();
-		for (Alert alert : request.alerts()) {
-			if (alert.isFiring()) {
-				openIfAbsent(alert, opened);
-			}
-			else {
-				resolveIfOpen(alert, resolved);
-			}
+	public Optional<Long> openIfAbsent(OpenIncidentCommand command) {
+		if (findOpen(command.fingerprint()).isPresent()) {
+			log.debug("Duplicate firing alert ignored: fingerprint={}", command.fingerprint());
+			return Optional.empty();
 		}
-		return new AlertReceiptResponse(opened, resolved);
+		Incident incident = Incident.open(command.fingerprint(), command.alertName(), command.service(),
+				command.severity(), command.summary(), command.startedAt());
+		Long incidentId = incidentRepository.save(incident).getId();
+		log.info("Incident opened: id={}, alert={}, service={}", incidentId, command.alertName(), command.service());
+		// 조사 시작은 이벤트로 알리기만 합니다. IncidentService는 누가 조사하는지 알 필요가 없습니다.
+		eventPublisher.publishEvent(new IncidentOpenedEvent(incidentId));
+		return Optional.of(incidentId);
+	}
+
+	/**
+	 * @return 해소한 장애의 ID. 열린 장애가 없으면 비어 있습니다.
+	 */
+	@Transactional
+	public Optional<Long> resolveIfOpen(String fingerprint, Instant resolvedAt) {
+		return findOpen(fingerprint).map(incident -> {
+			// 변경 감지(dirty checking): 트랜잭션이 끝날 때 바뀐 필드가 자동으로 UPDATE 됩니다.
+			incident.resolve(resolvedAt);
+			log.info("Incident resolved: id={}", incident.getId());
+			return incident.getId();
+		});
 	}
 
 	public IncidentResponse getIncident(Long id) {
@@ -53,34 +63,12 @@ public class IncidentService {
 				.orElseThrow(() -> new IncidentNotFoundException(id));
 	}
 
-	/**
-	 * Alertmanager는 알림이 해소될 때까지 같은 알림을 주기적으로 다시 보냅니다(repeat_interval).
-	 * 이미 열린 장애가 있으면 새로 만들지 않아 중복 조사를 막습니다.
-	 */
-	private void openIfAbsent(Alert alert, List<Long> opened) {
-		if (incidentRepository.findFirstByFingerprintAndStatus(alert.fingerprint(), IncidentStatus.OPEN).isPresent()) {
-			log.debug("Duplicate firing alert ignored: fingerprint={}", alert.fingerprint());
-			return;
-		}
-		String summary = alert.annotation("summary") != null ? alert.annotation("summary")
-				: alert.annotation("description");
-		Incident incident = Incident.open(alert.fingerprint(), alert.label("alertname", "unknown"),
-				alert.label("service", alert.label("job", "unknown")), alert.label("severity", "none"), summary,
-				alert.startsAt());
-		Long id = incidentRepository.save(incident).getId();
-		log.info("Incident opened: id={}, alert={}, service={}", id, incident.getAlertName(), incident.getService());
-		opened.add(id);
-		// 조사 시작은 이벤트로 알리기만 합니다. IncidentService는 누가 조사하는지 알 필요가 없습니다.
-		eventPublisher.publishEvent(new IncidentOpenedEvent(id));
+	/** 다른 패키지에서 장애 정보가 필요할 때 엔티티 대신 읽기 전용 복사본을 돌려줍니다. */
+	public Optional<IncidentSnapshot> findSnapshot(Long id) {
+		return incidentRepository.findById(id).map(IncidentSnapshot::from);
 	}
 
-	private void resolveIfOpen(Alert alert, List<Long> resolved) {
-		incidentRepository.findFirstByFingerprintAndStatus(alert.fingerprint(), IncidentStatus.OPEN)
-				.ifPresent(incident -> {
-					// 변경 감지(dirty checking): 트랜잭션이 끝날 때 바뀐 필드가 자동으로 UPDATE 됩니다.
-					incident.resolve(alert.endsAt() != null ? alert.endsAt() : Instant.now());
-					log.info("Incident resolved: id={}", incident.getId());
-					resolved.add(incident.getId());
-				});
+	private Optional<Incident> findOpen(String fingerprint) {
+		return incidentRepository.findFirstByFingerprintAndStatus(fingerprint, IncidentStatus.OPEN);
 	}
 }

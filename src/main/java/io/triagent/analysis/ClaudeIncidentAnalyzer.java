@@ -9,8 +9,9 @@ import com.anthropic.models.beta.messages.BetaOutputConfig;
 import com.anthropic.models.beta.messages.BetaStopReason;
 import com.anthropic.models.beta.messages.MessageCreateParams;
 
-import io.triagent.incident.IncidentResponse;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
+import io.triagent.investigation.IncidentAnalyzer;
 
 /**
  * Claude에 장애 근거를 전달해 원인 후보와 권장 조치를 받아 옵니다.
@@ -42,7 +43,7 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 	}
 
 	@Override
-	public String analyze(IncidentResponse incident, List<Evidence> evidences) {
+	public String analyze(IncidentSnapshot incident, List<Evidence> evidences) {
 		MessageCreateParams params = MessageCreateParams.builder()
 				.model(properties.model())
 				.maxTokens(properties.maxTokens())
@@ -70,7 +71,7 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 		return text;
 	}
 
-	static String userMessage(IncidentResponse incident, List<Evidence> evidences) {
+	static String userMessage(IncidentSnapshot incident, List<Evidence> evidences) {
 		String evidenceText = evidences.stream()
 				.map(e -> "<item source=\"%s\" status=\"%s\">\n%s\n</item>".formatted(e.source(),
 						e.success() ? "ok" : "failed", e.content()))

@@ -9,9 +9,10 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import io.triagent.incident.IncidentResponse;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import io.triagent.investigation.InvestigationReport;
+import io.triagent.investigation.Notifier;
 
 /**
  * Slack Incoming Webhook으로 조사 결과를 보냅니다.
@@ -49,7 +50,7 @@ public class SlackNotifier implements Notifier {
 	 * Block Kit 메시지를 만듭니다. text는 알림 미리보기와 blocks를 표시하지 못하는 클라이언트에서 쓰입니다.
 	 */
 	Map<String, Object> toMessage(InvestigationReport report) {
-		IncidentResponse incident = report.incident();
+		IncidentSnapshot incident = report.incident();
 		String title = "[%s] %s 장애 발생: %s".formatted(incident.severity().toUpperCase(), incident.service(),
 				incident.alertName());
 		String evidenceText = report.evidences().isEmpty() ? "수집된 근거가 없습니다."
