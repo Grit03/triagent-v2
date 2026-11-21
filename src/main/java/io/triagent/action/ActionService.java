@@ -43,6 +43,7 @@ public class ActionService {
 		RemediationAction saved = actionRepository.save(action);
 		log.info("Action requested: id={}, incidentId={}, type={}, service={}, requestedBy={}", saved.getId(),
 				incidentId, saved.getType(), saved.getService(), saved.getRequestedBy());
+		eventPublisher.publishEvent(new ActionRequestedEvent(saved.getId()));
 		return ActionResponse.from(saved);
 	}
 
