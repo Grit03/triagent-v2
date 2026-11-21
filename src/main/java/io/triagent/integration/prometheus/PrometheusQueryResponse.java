@@ -15,5 +15,10 @@ public record PrometheusQueryResponse(String status, Data data) {
 	}
 
 	public record Sample(Map<String, String> metric, List<Object> value) {
+
+		public double numericValue() {
+			Object sampleValue = value.get(1);
+			return Double.parseDouble(sampleValue.toString());
+		}
 	}
 }

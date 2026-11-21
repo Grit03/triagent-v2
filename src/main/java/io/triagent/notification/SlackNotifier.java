@@ -1,7 +1,6 @@
 package io.triagent.notification;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -13,6 +12,7 @@ import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import io.triagent.investigation.InvestigationReport;
 import io.triagent.investigation.Notifier;
+import io.triagent.notification.SlackMessage.Block;
 
 /**
  * Slack Incoming Webhook으로 조사 결과를 보냅니다.
@@ -30,7 +30,6 @@ public class SlackNotifier implements Notifier {
 
 	private final SlackProperties properties;
 
-	/** Spring Boot가 자동 구성한 RestClient.Builder를 받아 쓰면 공통 설정(메시지 컨버터, 관측)이 그대로 적용됩니다. */
 	public SlackNotifier(RestClient.Builder restClientBuilder, SlackProperties properties) {
 		this.restClient = restClientBuilder.build();
 		this.properties = properties;
@@ -46,21 +45,20 @@ public class SlackNotifier implements Notifier {
 				.toBodilessEntity();
 	}
 
-	/**
-	 * Block Kit 메시지를 만듭니다. text는 알림 미리보기와 blocks를 표시하지 못하는 클라이언트에서 쓰입니다.
-	 */
-	Map<String, Object> toMessage(InvestigationReport report) {
+	SlackMessage toMessage(InvestigationReport report) {
 		IncidentSnapshot incident = report.incident();
 		String title = "[%s] %s 장애 발생: %s".formatted(incident.severity().toUpperCase(), incident.service(),
 				incident.alertName());
+		String summary = incident.summary() != null ? incident.summary() : "-";
+		String overview = "*요약*\n%s\n*시작 시각* %s\n*장애 ID* %d".formatted(summary, incident.startedAt(),
+				incident.id());
 		String evidenceText = report.evidences().isEmpty() ? "수집된 근거가 없습니다."
 				: report.evidences().stream().map(SlackNotifier::formatEvidence).collect(Collectors.joining("\n"));
-		return Map.of("text", title, "blocks", List.of(
-				Map.of("type", "header", "text", Map.of("type", "plain_text", "text", title)),
-				section("*요약*\n" + (incident.summary() != null ? incident.summary() : "-")
-						+ "\n*시작 시각* " + incident.startedAt() + "\n*장애 ID* " + incident.id()),
-				section("*분석*\n" + truncate(report.analysis())),
-				section("*조사 근거*\n" + truncate(evidenceText))));
+		return new SlackMessage(title, List.of(
+				Block.header(title),
+				Block.section(overview),
+				Block.section("*분석*\n" + truncate(report.analysis())),
+				Block.section("*조사 근거*\n" + truncate(evidenceText))));
 	}
 
 	/** Slack section 블록의 text는 3,000자를 넘으면 전송이 실패하므로 여유 있게 자릅니다. */
@@ -68,11 +66,8 @@ public class SlackNotifier implements Notifier {
 		return text.length() <= MAX_SECTION_LENGTH ? text : text.substring(0, MAX_SECTION_LENGTH) + "\n...(생략)";
 	}
 
-	private static Map<String, Object> section(String markdown) {
-		return Map.of("type", "section", "text", Map.of("type", "mrkdwn", "text", markdown));
-	}
-
 	private static String formatEvidence(Evidence evidence) {
-		return (evidence.success() ? "• " : "• :warning: ") + "`" + evidence.source() + "` " + evidence.content();
+		String bullet = evidence.success() ? "• " : "• :warning: ";
+		return bullet + "`" + evidence.source() + "` " + evidence.content();
 	}
 }

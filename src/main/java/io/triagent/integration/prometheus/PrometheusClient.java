@@ -1,11 +1,14 @@
 package io.triagent.integration.prometheus;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.OptionalDouble;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+
+import io.triagent.integration.prometheus.PrometheusQueryResponse.Sample;
 
 /**
  * Prometheus HTTP API 호출만 담당합니다.
@@ -32,11 +35,14 @@ public class PrometheusClient {
 						.build(promQl))
 				.retrieve()
 				.body(PrometheusQueryResponse.class);
-		if (response == null || response.data() == null || response.data().result() == null
-				|| response.data().result().isEmpty()) {
+		if (response == null || response.data() == null || response.data().result() == null) {
 			return OptionalDouble.empty();
 		}
-		Object value = response.data().result().get(0).value().get(1);
-		return OptionalDouble.of(Double.parseDouble(value.toString()));
+		List<Sample> samples = response.data().result();
+		if (samples.isEmpty()) {
+			return OptionalDouble.empty();
+		}
+		Sample firstSample = samples.get(0);
+		return OptionalDouble.of(firstSample.numericValue());
 	}
 }

@@ -50,7 +50,7 @@ public class IncidentService {
 	@Transactional
 	public Optional<Long> resolveIfOpen(String fingerprint, Instant resolvedAt) {
 		return findOpen(fingerprint).map(incident -> {
-			// 변경 감지(dirty checking): 트랜잭션이 끝날 때 바뀐 필드가 자동으로 UPDATE 됩니다.
+			// 변경 감지(dirty checking)로 커밋 시점에 UPDATE되므로 save()를 다시 부르지 않습니다.
 			incident.resolve(resolvedAt);
 			log.info("Incident resolved: id={}", incident.getId());
 			return incident.getId();

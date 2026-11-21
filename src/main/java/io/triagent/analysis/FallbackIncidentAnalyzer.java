@@ -28,7 +28,6 @@ public class FallbackIncidentAnalyzer implements IncidentAnalyzer {
 
 	private final RuleBasedIncidentAnalyzer ruleBasedAnalyzer;
 
-	/** 빈이 없을 수도 있는 의존성은 Optional로 주입받습니다. */
 	public FallbackIncidentAnalyzer(Optional<ClaudeIncidentAnalyzer> claudeAnalyzer,
 			RuleBasedIncidentAnalyzer ruleBasedAnalyzer) {
 		this.claudeAnalyzer = claudeAnalyzer;

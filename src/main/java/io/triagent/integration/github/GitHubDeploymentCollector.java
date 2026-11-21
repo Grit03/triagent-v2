@@ -46,11 +46,10 @@ public class GitHubDeploymentCollector implements ContextCollector {
 		if (commits.isEmpty()) {
 			return Evidence.success(SOURCE, "%s: 장애 전 %d시간 동안 커밋이 없습니다.".formatted(repository, hours));
 		}
-		String lines = commits.stream()
-				.map(c -> "- %s %s (%s, %s)".formatted(c.shortSha(), c.title(), c.commit().author().name(),
-						c.commit().author().date()))
+		String commitLines = commits.stream()
+				.map(GitHubCommit::toSummaryLine)
 				.collect(Collectors.joining("\n"));
 		return Evidence.success(SOURCE,
-				"%s: 장애 전 %d시간 동안 커밋 %d건\n%s".formatted(repository, hours, commits.size(), lines));
+				"%s: 장애 전 %d시간 동안 커밋 %d건\n%s".formatted(repository, hours, commits.size(), commitLines));
 	}
 }

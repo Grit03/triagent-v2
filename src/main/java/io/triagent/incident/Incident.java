@@ -68,7 +68,6 @@ public class Incident {
 		return new Incident(fingerprint, alertName, service, severity, summary, startedAt);
 	}
 
-	/** 상태 변경은 setter 대신 의미 있는 메서드로만 허용합니다. */
 	public void resolve(Instant resolvedAt) {
 		if (status == IncidentStatus.RESOLVED) {
 			return;
@@ -77,13 +76,39 @@ public class Incident {
 		this.resolvedAt = resolvedAt;
 	}
 
-	public Long getId() { return id; }
-	public String getFingerprint() { return fingerprint; }
-	public String getAlertName() { return alertName; }
-	public String getService() { return service; }
-	public String getSeverity() { return severity; }
-	public String getSummary() { return summary; }
-	public IncidentStatus getStatus() { return status; }
-	public Instant getStartedAt() { return startedAt; }
-	public Instant getResolvedAt() { return resolvedAt; }
+	public Long getId() {
+		return id;
+	}
+
+	public String getFingerprint() {
+		return fingerprint;
+	}
+
+	public String getAlertName() {
+		return alertName;
+	}
+
+	public String getService() {
+		return service;
+	}
+
+	public String getSeverity() {
+		return severity;
+	}
+
+	public String getSummary() {
+		return summary;
+	}
+
+	public IncidentStatus getStatus() {
+		return status;
+	}
+
+	public Instant getStartedAt() {
+		return startedAt;
+	}
+
+	public Instant getResolvedAt() {
+		return resolvedAt;
+	}
 }
