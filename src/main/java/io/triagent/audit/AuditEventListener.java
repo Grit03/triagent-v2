@@ -1,13 +1,21 @@
 package io.triagent.audit;
 
+import java.time.Instant;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import io.triagent.action.ActionApprovedEvent;
+import io.triagent.action.ActionDecisionDeniedEvent;
+import io.triagent.action.ActionFinishedEvent;
+import io.triagent.action.ActionRejectedEvent;
 import io.triagent.action.ActionRequestedEvent;
 import io.triagent.action.ActionResponse;
 import io.triagent.action.ActionService;
+import io.triagent.action.ActionStatus;
 import io.triagent.incident.IncidentOpenedEvent;
 import io.triagent.incident.IncidentResolvedEvent;
 import io.triagent.incident.IncidentService;
@@ -25,6 +33,9 @@ public class AuditEventListener {
 
 	/** Alertmanager 웹훅으로 일어난 일의 행위자 */
 	static final String ALERTMANAGER = "alertmanager";
+
+	/** 승인된 조치를 실행한 시스템 */
+	static final String EXECUTOR = "triagent";
 
 	private final AuditLogService auditLogService;
 
@@ -46,14 +57,14 @@ public class AuditEventListener {
 					.map(incident -> "%s (%s, %s)".formatted(incident.alertName(), incident.service(),
 							incident.severity()))
 					.orElse(null);
-			auditLogService.record(ALERTMANAGER, AuditEventType.INCIDENT_OPENED, event.incidentId(), null, detail);
+			auditLogService.record(Instant.now(), ALERTMANAGER, AuditEventType.INCIDENT_OPENED, event.incidentId(), null, detail);
 		});
 	}
 
 	@TransactionalEventListener
 	public void onIncidentResolved(IncidentResolvedEvent event) {
 		recordSafely(() -> {
-			auditLogService.record(ALERTMANAGER, AuditEventType.INCIDENT_RESOLVED, event.incidentId(), null, null);
+			auditLogService.record(Instant.now(), ALERTMANAGER, AuditEventType.INCIDENT_RESOLVED, event.incidentId(), null, null);
 		});
 	}
 
@@ -62,9 +73,45 @@ public class AuditEventListener {
 		recordSafely(() -> {
 			ActionResponse action = actionService.getAction(event.actionId());
 			String detail = "%s %s: %s".formatted(action.type(), action.service(), action.reason());
-			auditLogService.record(action.requestedBy(), AuditEventType.ACTION_REQUESTED, action.incidentId(),
+			auditLogService.record(action.requestedAt(), action.requestedBy(), AuditEventType.ACTION_REQUESTED, action.incidentId(),
 					action.id(), detail);
 		});
+	}
+
+	@TransactionalEventListener
+	public void onActionApproved(ActionApprovedEvent event) {
+		recordSafely(() -> recordDecision(event.actionId(), AuditEventType.ACTION_APPROVED));
+	}
+
+	@TransactionalEventListener
+	public void onActionRejected(ActionRejectedEvent event) {
+		recordSafely(() -> recordDecision(event.actionId(), AuditEventType.ACTION_REJECTED));
+	}
+
+	/** 거부된 결정은 트랜잭션이 롤백되므로 AFTER_ROLLBACK에서 받습니다. */
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+	public void onDecisionDenied(ActionDecisionDeniedEvent event) {
+		recordSafely(() -> {
+			ActionResponse action = actionService.getAction(event.actionId());
+			auditLogService.record(Instant.now(), event.userId(), AuditEventType.ACTION_DENIED, action.incidentId(),
+					action.id(), event.reason());
+		});
+	}
+
+	@TransactionalEventListener
+	public void onActionFinished(ActionFinishedEvent event) {
+		recordSafely(() -> {
+			ActionResponse action = actionService.getAction(event.actionId());
+			AuditEventType type = action.status() == ActionStatus.EXECUTED ? AuditEventType.ACTION_EXECUTED
+					: AuditEventType.ACTION_FAILED;
+			auditLogService.record(action.finishedAt(), EXECUTOR, type, action.incidentId(), action.id(),
+					action.result());
+		});
+	}
+
+	private void recordDecision(Long actionId, AuditEventType type) {
+		ActionResponse action = actionService.getAction(actionId);
+		auditLogService.record(action.decidedAt(), action.decidedBy(), type, action.incidentId(), action.id(), null);
 	}
 
 	private void recordSafely(Runnable recording) {
