@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
 import io.triagent.incident.Incident;
+import io.triagent.integration.LabelValues;
 import io.triagent.integration.loki.LokiClient.LogLine;
 import io.triagent.investigation.ContextCollector;
 import io.triagent.investigation.Evidence;
@@ -40,7 +41,7 @@ public class LokiLogCollector implements ContextCollector {
 
 	@Override
 	public Evidence collect(Incident incident) {
-		String logQl = properties.query().formatted(escape(incident.getService()));
+		String logQl = properties.query().formatted(LabelValues.escape(incident.getService()));
 		Instant start = incident.getStartedAt().minus(properties.lookback());
 		// 알림은 보통 문제가 생기고 조금 뒤에 오므로, 장애 시작 이후 로그도 지금까지 함께 봅니다.
 		Instant end = Instant.now();
@@ -54,10 +55,6 @@ public class LokiLogCollector implements ContextCollector {
 		return Evidence.success(SOURCE, "에러 로그 %d건 (최신순)\n%s".formatted(lines.size(), body));
 	}
 
-	/** 라벨 값의 따옴표와 역슬래시를 이스케이프해 LogQL 문법이 깨지거나 조작되지 않게 합니다. */
-	static String escape(String value) {
-		return value.replace("\\", "\\\\").replace("\"", "\\\"");
-	}
 
 	private static String truncate(String line) {
 		String singleLine = line.replace('\n', ' ');
