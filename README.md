@@ -26,10 +26,13 @@ curl http://localhost:8080/actuator/health
 ./gradlew test
 ```
 
+`PostgresMigrationTest`는 Testcontainers로 PostgreSQL 컨테이너를 띄우므로 Docker가 실행 중이어야 합니다.
+
 ## 설정
 
 | 환경 변수 | 설명 | 기본값 |
 | --- | --- | --- |
+| `SPRING_DATASOURCE_URL` | PostgreSQL 주소(예: `jdbc:postgresql://localhost:5432/triagent`). `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`와 함께 씁니다. 비워 두면 메모리 DB(H2)를 써서 재시작하면 데이터가 사라집니다. | (없음, H2) |
 | `SLACK_WEBHOOK_URL` | 조사 결과를 보낼 Slack Incoming Webhook URL. 비워 두면 로그로만 남깁니다. | (없음) |
 | `LOKI_URL` | Loki 주소(예: `http://localhost:3100`). 비워 두면 로그 수집을 끕니다. | (없음) |
 | `PROMETHEUS_URL` | Prometheus 주소(예: `http://localhost:9090`). 비워 두면 지표 수집을 끕니다. | (없음) |
