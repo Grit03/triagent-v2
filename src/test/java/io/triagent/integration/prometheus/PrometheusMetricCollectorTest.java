@@ -15,7 +15,7 @@ import java.util.OptionalDouble;
 
 import org.junit.jupiter.api.Test;
 
-import io.triagent.incident.Incident;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 
 class PrometheusMetricCollectorTest {
@@ -36,7 +36,7 @@ class PrometheusMetricCollectorTest {
 		given(client.query(eq("latency{service=\"payment-api\"}"), any()))
 				.willThrow(new IllegalStateException("timeout"));
 
-		Evidence evidence = collector.collect(Incident.open("fp", "HighErrorRate", "payment-api", "critical", null,
+		Evidence evidence = collector.collect(new IncidentSnapshot(1L, "HighErrorRate", "payment-api", "critical", null,
 				STARTED_AT));
 
 		assertThat(evidence).isEqualTo(Evidence.success("prometheus", """
@@ -49,7 +49,7 @@ class PrometheusMetricCollectorTest {
 	void showsMissingDataExplicitly() {
 		given(client.query(any(), any())).willReturn(OptionalDouble.empty());
 
-		assertThat(collector.collect(Incident.open("fp", "a", "payment-api", "critical", null, STARTED_AT)).content())
+		assertThat(collector.collect(new IncidentSnapshot(1L, "a", "payment-api", "critical", null, STARTED_AT)).content())
 				.contains("- error-rate: 데이터 없음 → 데이터 없음");
 	}
 

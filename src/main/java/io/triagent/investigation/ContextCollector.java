@@ -1,6 +1,6 @@
 package io.triagent.investigation;
 
-import io.triagent.incident.Incident;
+import io.triagent.incident.IncidentSnapshot;
 
 /**
  * 장애 조사에 필요한 근거를 외부 도구(배포 이력, 로그, 지표)에서 모으는 전략 인터페이스.
@@ -11,5 +11,5 @@ public interface ContextCollector {
 
 	String source();
 
-	Evidence collect(Incident incident);
+	Evidence collect(IncidentSnapshot incident);
 }

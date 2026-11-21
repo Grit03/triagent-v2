@@ -32,12 +32,32 @@ public record AlertmanagerWebhookRequest(
 			return "firing".equalsIgnoreCase(status);
 		}
 
-		public String label(String key, String defaultValue) {
-			return labels.getOrDefault(key, defaultValue);
+		public String alertName() {
+			return labels.getOrDefault("alertname", "unknown");
 		}
 
-		public String annotation(String key) {
-			return annotations == null ? null : annotations.get(key);
+		/** service 라벨이 없으면 Prometheus가 기본으로 붙이는 job 라벨을 씁니다. */
+		public String service() {
+			String job = labels.getOrDefault("job", "unknown");
+			return labels.getOrDefault("service", job);
+		}
+
+		public String severity() {
+			return labels.getOrDefault("severity", "none");
+		}
+
+		/** summary 어노테이션이 없으면 description을 씁니다. */
+		public String summary() {
+			if (annotations == null) {
+				return null;
+			}
+			String description = annotations.get("description");
+			return annotations.getOrDefault("summary", description);
+		}
+
+		/** resolved 알림에 endsAt이 없으면 받은 시각을 해소 시각으로 씁니다. */
+		public Instant resolvedAt() {
+			return endsAt != null ? endsAt : Instant.now();
 		}
 	}
 }

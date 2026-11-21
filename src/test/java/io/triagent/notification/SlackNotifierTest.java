@@ -16,8 +16,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
-import io.triagent.incident.IncidentResponse;
-import io.triagent.incident.IncidentStatus;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import io.triagent.investigation.InvestigationReport;
 
@@ -43,8 +42,7 @@ class SlackNotifierTest {
 				.andRespond(withSuccess());
 
 		notifier.send(new InvestigationReport(
-				new IncidentResponse(1L, "HighErrorRate", "payment-api", "critical", "5xx > 5%", IncidentStatus.OPEN,
-						Instant.parse("2026-11-21T01:00:00Z"), null),
+				new IncidentSnapshot(1L, "HighErrorRate", "payment-api", "critical", "5xx > 5%", Instant.parse("2026-11-21T01:00:00Z")),
 				List.of(Evidence.success("github", "최근 커밋 3건"), Evidence.failure("loki", "조회 실패: timeout")),
 				"원인 후보: 최근 배포"));
 

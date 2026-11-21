@@ -13,7 +13,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import io.triagent.incident.Incident;
+import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 
 class GitHubDeploymentCollectorTest {
@@ -48,7 +48,7 @@ class GitHubDeploymentCollectorTest {
 		verifyNoInteractions(client);
 	}
 
-	private static Incident incident(String service) {
-		return Incident.open("fp", "HighErrorRate", service, "critical", null, STARTED_AT);
+	private static IncidentSnapshot incident(String service) {
+		return new IncidentSnapshot(1L, "HighErrorRate", service, "critical", null, STARTED_AT);
 	}
 }
