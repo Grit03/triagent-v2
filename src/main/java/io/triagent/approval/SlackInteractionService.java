@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClient;
 import io.triagent.action.ActionAlreadyDecidedException;
 import io.triagent.action.ActionNotFoundException;
 import io.triagent.action.ActionService;
+import io.triagent.action.DecisionNotAllowedException;
 import io.triagent.approval.SlackInteractionPayload.Action;
 
 /**
@@ -55,7 +56,7 @@ public class SlackInteractionService {
 				default -> throw new IllegalArgumentException("Unknown action_id: " + clicked.actionId());
 			};
 		}
-		catch (ActionAlreadyDecidedException | ActionNotFoundException ex) {
+		catch (ActionAlreadyDecidedException | ActionNotFoundException | DecisionNotAllowedException ex) {
 			log.info("Slack decision ignored: actionId={}, user={}, reason={}", actionId, userId, ex.getMessage());
 			return ":warning: 조치 %d는 처리할 수 없습니다: %s".formatted(actionId, ex.getMessage());
 		}

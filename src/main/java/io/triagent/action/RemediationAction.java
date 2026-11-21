@@ -80,7 +80,11 @@ public class RemediationAction {
 		return new RemediationAction(incidentId, service, type, reason, requestedBy, requestedAt);
 	}
 
+	/** 요청한 사람은 자기 요청을 승인할 수 없습니다(두 사람 확인 원칙). 거절, 즉 요청 철회는 할 수 있습니다. */
 	public void approve(String approver, Instant decidedAt) {
+		if (approver.equals(requestedBy)) {
+			throw new DecisionNotAllowedException("Requester %s cannot approve their own action".formatted(approver));
+		}
 		decide(ActionStatus.APPROVED, approver, decidedAt);
 	}
 
