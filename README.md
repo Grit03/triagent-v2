@@ -75,7 +75,17 @@ curl -X PUT "http://localhost:8081/chaos/error-rate?rate=0.5"
 3. Triagent가 Prometheus에서 장애 30분 전과 현재의 에러율을, Loki에서 `Connection pool exhausted` 에러 로그를 근거로 모아 보고합니다. 스택을 띄운 지 30분이 안 됐다면 장애 전 값은 `데이터 없음`으로 나옵니다.
 4. `rate=0`으로 되돌리면 Alertmanager가 해소 알림을 보내고, Triagent가 장애를 `RESOLVED`로 닫습니다(되돌린 지 약 90초).
 
-보고는 Slack을 설정했다면 Slack으로, 아니면 `docker compose logs triagent`에 남습니다. `ANTHROPIC_API_KEY`를 넣으면 Claude가 근거를 분석하고 조치를 제안합니다. 장애와 감사 로그는 API로 확인합니다.
+보고는 Slack을 설정했다면 Slack으로, 아니면 `docker compose logs triagent`에 남습니다. `ANTHROPIC_API_KEY`를 넣으면 Claude가 근거를 분석하고, 근거가 충분할 때 조치를 제안합니다.
+
+데모는 API 비용을 줄이기 위해 `claude-haiku-5-5`, effort `low`, 최대 4000토큰으로 실행합니다. 운영 기본값(`claude-opus-5-5`, effort `medium`)으로 돌려 보려면 `.env`에 `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `ANTHROPIC_MAX_TOKENS`를 넣습니다. 장애 하나에 분석은 한 번만 실행됩니다. 같은 장애의 알림이 반복돼도 새 장애를 만들지 않기 때문입니다.
+
+실제 Slack과 Claude(Haiku 5.5)로 돌린 결과는 다음과 같습니다.
+
+- 장애를 일으키고 44초 뒤 장애가 열렸고, 약 11초 뒤 분석이 담긴 보고가 Slack 채널에 도착했습니다.
+- Claude는 Loki 에러 로그 20건이 모두 `Connection pool exhausted: payment-db`인 점을 들어 커넥션 풀 고갈을 가장 유력한 원인으로 꼽았습니다. GitHub 저장소가 연결되지 않았고 장애 전 지표가 없다는 점도 함께 적었습니다.
+- 롤백이나 재시작이 해결책이라는 근거가 없다며 조치는 제안하지 않았습니다. 그래서 승인 버튼 메시지도 나가지 않았습니다.
+
+장애와 감사 로그는 API로 확인합니다.
 
 ```bash
 curl http://localhost:8080/api/v1/incidents/1
