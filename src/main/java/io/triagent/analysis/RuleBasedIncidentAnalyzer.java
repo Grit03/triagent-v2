@@ -31,10 +31,12 @@ public class RuleBasedIncidentAnalyzer implements IncidentAnalyzer {
 				hints.add("에러 로그가 있습니다. 가장 최근 예외 메시지를 확인하세요.");
 			}
 		}
-		String failed = evidences.stream().filter(e -> !e.success()).map(Evidence::source)
+		String failedSources = evidences.stream()
+				.filter(evidence -> !evidence.success())
+				.map(Evidence::source)
 				.collect(Collectors.joining(", "));
-		if (!failed.isEmpty()) {
-			hints.add("조회에 실패한 근거가 있습니다: " + failed);
+		if (!failedSources.isEmpty()) {
+			hints.add("조회에 실패한 근거가 있습니다: " + failedSources);
 		}
 		if (hints.isEmpty()) {
 			hints.add("자동으로 짚을 만한 근거가 없습니다. 대시보드에서 직접 확인이 필요합니다.");

@@ -42,10 +42,17 @@ public class LokiClient {
 		// 스트림(라벨 조합)별로 나뉜 결과를 하나로 합쳐 최신순으로 정렬합니다.
 		return response.data().result().stream()
 				.flatMap(stream -> stream.values().stream())
-				.map(value -> new LogLine(toInstant(value.get(0)), value.get(1)))
+				.map(LokiClient::toLogLine)
 				.sorted(Comparator.comparing(LogLine::timestamp).reversed())
 				.limit(limit)
 				.toList();
+	}
+
+	/** Loki는 로그 한 줄을 ["나노초 타임스탬프", "로그 내용"] 배열로 돌려줍니다. */
+	private static LogLine toLogLine(List<String> entry) {
+		String epochNanos = entry.get(0);
+		String line = entry.get(1);
+		return new LogLine(toInstant(epochNanos), line);
 	}
 
 	private static Instant toInstant(String epochNanos) {

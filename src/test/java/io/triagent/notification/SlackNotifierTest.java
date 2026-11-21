@@ -37,6 +37,9 @@ class SlackNotifierTest {
 				.andExpect(method(HttpMethod.POST))
 				.andExpect(jsonPath("$.text").value("[CRITICAL] payment-api 장애 발생: HighErrorRate"))
 				.andExpect(jsonPath("$.blocks[0].type").value("header"))
+				.andExpect(jsonPath("$.blocks[0].text.type").value("plain_text"))
+				.andExpect(jsonPath("$.blocks[1].type").value("section"))
+				.andExpect(jsonPath("$.blocks[1].text.type").value("mrkdwn"))
 				.andExpect(jsonPath("$.blocks[2].text.text").value("*분석*\n원인 후보: 최근 배포"))
 				.andExpect(jsonPath("$.blocks[3].text.text").value(containsString(":warning: `loki` 조회 실패")))
 				.andRespond(withSuccess());

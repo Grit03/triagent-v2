@@ -73,8 +73,7 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 
 	static String userMessage(IncidentSnapshot incident, List<Evidence> evidences) {
 		String evidenceText = evidences.stream()
-				.map(e -> "<item source=\"%s\" status=\"%s\">\n%s\n</item>".formatted(e.source(),
-						e.success() ? "ok" : "failed", e.content()))
+				.map(ClaudeIncidentAnalyzer::toEvidenceItem)
 				.collect(Collectors.joining("\n"));
 		return """
 				장애 정보
@@ -88,5 +87,11 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 				%s
 				</evidence>""".formatted(incident.alertName(), incident.service(), incident.severity(),
 				incident.summary(), incident.startedAt(), evidenceText);
+	}
+
+	private static String toEvidenceItem(Evidence evidence) {
+		String status = evidence.success() ? "ok" : "failed";
+		return "<item source=\"%s\" status=\"%s\">\n%s\n</item>".formatted(evidence.source(), status,
+				evidence.content());
 	}
 }
