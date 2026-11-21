@@ -1,0 +1,40 @@
+# 로컬 데모 환경. `docker compose up --build`로 실행합니다.
+# https://docs.docker.com/reference/compose-file/
+name: triagent
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: triagent
+      POSTGRES_USER: triagent
+      POSTGRES_PASSWORD: triagent
+    volumes:
+      # 컨테이너를 지웠다 다시 만들어도 데이터가 남도록 이름 있는 볼륨에 저장합니다.
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triagent -d triagent"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  triagent:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/triagent
+      SPRING_DATASOURCE_USERNAME: triagent
+      SPRING_DATASOURCE_PASSWORD: triagent
+      # 아래 값은 .env 파일이나 셸 환경 변수로 넣습니다. 비워 두면 해당 연동을 끄고 동작합니다.
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+    depends_on:
+      # PostgreSQL이 접속을 받을 수 있을 때까지 기다린 뒤 시작합니다. 그래야 Flyway 마이그레이션이 실패하지 않습니다.
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
