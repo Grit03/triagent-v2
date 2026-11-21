@@ -1,0 +1,8 @@
+# 이미지 빌드에 필요 없는 파일은 빌드 컨텍스트로 보내지 않습니다.
+.git
+.gradle
+build
+**/build
+.idea
+*.iml
+.env

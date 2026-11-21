@@ -28,6 +28,28 @@ curl http://localhost:8080/actuator/health
 
 `PostgresMigrationTest`는 Testcontainers로 PostgreSQL 컨테이너를 띄우므로 Docker가 실행 중이어야 합니다.
 
+## Docker Compose로 실행
+
+JDK 없이 Docker만 있으면 Triagent와 PostgreSQL을 함께 띄울 수 있습니다. 이미지 빌드(jar 빌드 포함)도 Docker 안에서 진행합니다.
+
+```bash
+docker compose up -d --build
+```
+
+Slack, Claude, GitHub 연동을 켜려면 저장소 루트의 `.env` 파일이나 셸 환경 변수로 아래 [설정](#설정)의 값을 넣습니다. 넣지 않으면 해당 연동 없이 동작합니다.
+
+테스트 알림을 보내고 장애가 열렸는지 확인합니다.
+
+```bash
+curl -H 'Content-Type: application/json' --data @src/test/resources/alertmanager/firing.json http://localhost:8080/api/v1/alerts/alertmanager
+```
+
+```bash
+curl http://localhost:8080/api/v1/incidents/1
+```
+
+데이터는 `postgres-data` 볼륨에 남으므로 컨테이너를 다시 만들어도 유지됩니다. 볼륨까지 지우려면 `docker compose down -v`를 실행합니다.
+
 ## 설정
 
 | 환경 변수 | 설명 | 기본값 |
