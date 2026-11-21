@@ -6,13 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import io.triagent.analysis.AnalysisService;
 import io.triagent.incident.Incident;
 import io.triagent.incident.IncidentRepository;
 import io.triagent.incident.IncidentResponse;
 import io.triagent.notification.Notifier;
 
 /**
- * 장애 하나를 조사하고 보고하는 워크플로: 근거 수집 → 보고서 작성 → 메신저 전송.
+ * 장애 하나를 조사하고 보고하는 워크플로: 근거 수집 → 원인 분석 → 메신저 전송.
  * <p>
  * 외부 API 호출이 길어질 수 있으므로 DB 트랜잭션을 걸지 않습니다.
  */
@@ -25,13 +26,16 @@ public class InvestigationService {
 
 	private final List<ContextCollector> collectors;
 
+	private final AnalysisService analysisService;
+
 	private final List<Notifier> notifiers;
 
 	/** 같은 타입의 빈이 여러 개면 List로 모두 주입받을 수 있습니다. */
 	public InvestigationService(IncidentRepository incidentRepository, List<ContextCollector> collectors,
-			List<Notifier> notifiers) {
+			AnalysisService analysisService, List<Notifier> notifiers) {
 		this.incidentRepository = incidentRepository;
 		this.collectors = collectors;
+		this.analysisService = analysisService;
 		this.notifiers = notifiers;
 	}
 
@@ -42,7 +46,9 @@ public class InvestigationService {
 			return;
 		}
 		List<Evidence> evidences = collectors.stream().map(collector -> collectSafely(collector, incident)).toList();
-		InvestigationReport report = new InvestigationReport(IncidentResponse.from(incident), evidences);
+		IncidentResponse incidentResponse = IncidentResponse.from(incident);
+		String analysis = analysisService.analyze(incidentResponse, evidences);
+		InvestigationReport report = new InvestigationReport(incidentResponse, evidences, analysis);
 		notifiers.forEach(notifier -> notifySafely(notifier, report));
 	}
 
