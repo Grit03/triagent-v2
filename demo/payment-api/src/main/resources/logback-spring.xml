@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 콘솔 로그는 Spring Boot 기본 설정을 쓰고, 같은 로그를 Loki에도 보냅니다. -->
+<!-- https://loki4j.github.io/loki-logback-appender/ -->
+<configuration>
+	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+	<include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+	<springProperty name="lokiUrl" source="LOKI_URL" defaultValue="http://localhost:3100"/>
+
+	<appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+		<http>
+			<url>${lokiUrl}/loki/api/v1/push</url>
+		</http>
+		<format>
+			<!-- Triagent는 service 라벨로 로그를 찾습니다(triagent.loki.query). -->
+			<label>
+				<pattern>service=payment-api,level=%level</pattern>
+			</label>
+			<message>
+				<pattern>%-5level %logger{36} - %msg %ex</pattern>
+			</message>
+		</format>
+	</appender>
+
+	<root level="INFO">
+		<appender-ref ref="CONSOLE"/>
+		<appender-ref ref="LOKI"/>
+	</root>
+</configuration>

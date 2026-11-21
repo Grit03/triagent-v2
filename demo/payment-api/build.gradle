@@ -1,0 +1,24 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.2.0'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// /actuator/prometheus로 Prometheus가 읽을 수 있는 형식의 지표를 내보냅니다.
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+	// 로그를 Loki로 바로 보냅니다. 2.x는 Logback 1.6이 필요해서 Spring Boot 4.2(Logback 1.5)와 맞는 1.6.0을 씁니다.
+	runtimeOnly 'com.github.loki4j:loki-logback-appender:1.6.0'
+}

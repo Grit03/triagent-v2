@@ -31,10 +31,46 @@ services:
       SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      PROMETHEUS_URL: http://prometheus:9090
+      LOKI_URL: http://loki:3100
     depends_on:
       # PostgreSQL이 접속을 받을 수 있을 때까지 기다린 뒤 시작합니다. 그래야 Flyway 마이그레이션이 실패하지 않습니다.
       postgres:
         condition: service_healthy
+
+  # 아래는 장애를 재현하고 근거를 모으기 위한 데모 구성입니다.
+  payment-api:
+    build:
+      # 루트의 Gradle Wrapper를 쓰기 위해 저장소 루트를 빌드 컨텍스트로 둡니다.
+      context: .
+      dockerfile: demo/payment-api/Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      LOKI_URL: http://loki:3100
+    depends_on:
+      - loki
+
+  # 결제 요청을 계속 보내 지표와 로그가 쌓이게 합니다.
+  traffic:
+    image: curlimages/curl:8.16.0
+    entrypoint: ["sh", "-c", "while true; do curl -s -o /dev/null -X POST http://payment-api:8080/api/payments; sleep 0.2; done"]
+    depends_on:
+      - payment-api
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./demo/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  loki:
+    image: grafana/loki:3.5.0
+    ports:
+      - "3100:3100"
+    # 이미지에 들어 있는 단일 노드용 기본 설정으로 실행합니다.
+    command: ["-config.file=/etc/loki/local-config.yaml"]
 
 volumes:
   postgres-data:

@@ -1,0 +1,2 @@
+// 데모용 결제 서버. Triagent와 별개인 독립 빌드라서 루트 빌드와 CI 테스트에 포함되지 않습니다.
+rootProject.name = 'payment-api'
