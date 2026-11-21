@@ -64,6 +64,15 @@ services:
       - "9090:9090"
     volumes:
       - ./demo/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./demo/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+
+  # Prometheus가 보낸 알림을 Triagent 웹훅으로 전달합니다.
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./demo/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
 
   loki:
     image: grafana/loki:3.5.0
