@@ -52,6 +52,10 @@ triagent:
     queries:
       error-rate: 'sum(rate(http_server_requests_seconds_count{service="%1$s",status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{service="%1$s"}[5m]))'
       p95-latency-seconds: 'histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{service="%1$s"}[5m])))'
+  access:
+    # 팀별 구성원(Slack 사용자 ID)과 담당 서비스. 담당 팀이 없는 서비스의 조치는 아무도 승인할 수 없습니다.
+    # 예: payments: { members: [U012ABCDEF], services: [payment-api] }
+    teams: {}
   analysis:
     anthropic:
       # Claude API 키. 비워 두면 LLM 대신 규칙 기반 요약을 사용합니다.

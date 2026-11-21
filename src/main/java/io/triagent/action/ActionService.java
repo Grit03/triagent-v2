@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.triagent.access.ServiceAccessPolicy;
 import io.triagent.incident.IncidentNotFoundException;
 import io.triagent.incident.IncidentService;
 import io.triagent.incident.IncidentSnapshot;
@@ -22,12 +23,15 @@ public class ActionService {
 
 	private final IncidentService incidentService;
 
+	private final ServiceAccessPolicy accessPolicy;
+
 	private final ApplicationEventPublisher eventPublisher;
 
 	public ActionService(RemediationActionRepository actionRepository, IncidentService incidentService,
-			ApplicationEventPublisher eventPublisher) {
+			ServiceAccessPolicy accessPolicy, ApplicationEventPublisher eventPublisher) {
 		this.actionRepository = actionRepository;
 		this.incidentService = incidentService;
+		this.accessPolicy = accessPolicy;
 		this.eventPublisher = eventPublisher;
 	}
 
@@ -53,6 +57,7 @@ public class ActionService {
 	@Transactional
 	public ActionResponse approve(Long actionId, String approver) {
 		RemediationAction action = findAction(actionId);
+		checkCanDecide(approver, action);
 		action.approve(approver, Instant.now());
 		log.info("Action approved: id={}, approver={}", actionId, approver);
 		eventPublisher.publishEvent(new ActionApprovedEvent(actionId));
@@ -62,6 +67,7 @@ public class ActionService {
 	@Transactional
 	public ActionResponse reject(Long actionId, String rejecter) {
 		RemediationAction action = findAction(actionId);
+		checkCanDecide(rejecter, action);
 		action.reject(rejecter, Instant.now());
 		log.info("Action rejected: id={}, rejecter={}", actionId, rejecter);
 		return ActionResponse.from(action);
@@ -81,6 +87,13 @@ public class ActionService {
 
 	public ActionResponse getAction(Long actionId) {
 		return ActionResponse.from(findAction(actionId));
+	}
+
+	private void checkCanDecide(String userId, RemediationAction action) {
+		if (!accessPolicy.canDecide(userId, action.getService())) {
+			throw new DecisionNotAllowedException(
+					"%s is not a member of the team owning %s".formatted(userId, action.getService()));
+		}
 	}
 
 	private RemediationAction findAction(Long actionId) {

@@ -85,6 +85,14 @@ class SlackInteractionControllerTest {
 	}
 
 	@Test
+	void clickFromUserOutsideOwningTeamIsDenied() {
+		assertThat(click("approve_action", true, "U_STRANGER")).hasStatusOk();
+
+		assertThat(actionService.getAction(actionId).status()).isEqualTo(ActionStatus.PENDING);
+		verify(interactionService).replaceOriginalMessage(eq(RESPONSE_URL), contains("not a member"));
+	}
+
+	@Test
 	void unsignedClickIsRejected() {
 		assertThat(click("approve_action", false)).hasStatus(HttpStatus.UNAUTHORIZED);
 
@@ -92,9 +100,13 @@ class SlackInteractionControllerTest {
 	}
 
 	private MvcTestResult click(String buttonActionId, boolean signed) {
+		return click(buttonActionId, signed, "U_LEAD");
+	}
+
+	private MvcTestResult click(String buttonActionId, boolean signed, String userId) {
 		String payload = """
-				{"type":"block_actions","user":{"id":"U_LEAD"},"response_url":"%s",
-				 "actions":[{"action_id":"%s","value":"%d"}]}""".formatted(RESPONSE_URL, buttonActionId, actionId);
+				{"type":"block_actions","user":{"id":"%s"},"response_url":"%s",
+				 "actions":[{"action_id":"%s","value":"%d"}]}""".formatted(userId, RESPONSE_URL, buttonActionId, actionId);
 		String body = "payload=" + URLEncoder.encode(payload, StandardCharsets.UTF_8);
 		String timestamp = String.valueOf(Instant.now().getEpochSecond());
 		String signature = signed ? signatureVerifier.sign("v0:" + timestamp + ":" + body) : "v0=forged";

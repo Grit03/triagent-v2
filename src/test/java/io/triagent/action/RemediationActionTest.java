@@ -50,6 +50,14 @@ class RemediationActionTest {
 		assertThat(action.getFinishedAt()).isEqualTo(NOW);
 	}
 
+	@Test
+	void requesterCannotApproveOwnAction() {
+		RemediationAction action = pendingAction();
+
+		assertThatThrownBy(() -> action.approve("U_ONCALL", NOW)).isInstanceOf(DecisionNotAllowedException.class);
+		assertThat(action.getStatus()).isEqualTo(ActionStatus.PENDING);
+	}
+
 	private static RemediationAction pendingAction() {
 		return RemediationAction.request(1L, "payment-api", ActionType.ROLLBACK, "a1b2c3d 배포 후 5xx 증가", "U_ONCALL",
 				NOW);

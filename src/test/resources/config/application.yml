@@ -1,0 +1,8 @@
+# 테스트 전용 추가 설정. Spring Boot는 classpath:/application.yml 다음에 classpath:/config/application.yml을 읽어 덮어씁니다.
+# https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.files
+triagent:
+  access:
+    teams:
+      payments:
+        members: [U_LEAD, U_ONCALL]
+        services: [payment-api]

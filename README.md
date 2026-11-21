@@ -54,6 +54,16 @@ triagent:
 2. Basic Information > App Credentials의 Signing Secret을 `SLACK_SIGNING_SECRET`에 넣습니다.
 3. Interactivity & Shortcuts를 켜고 Request URL을 `https://<서버 주소>/api/v1/slack/interactions`로 지정합니다. 로컬에서 시험할 때는 ngrok 같은 터널로 외부 주소를 만들어야 합니다.
 4. 조치를 요청하면 채널에 승인, 거절 버튼이 달린 메시지가 오고, 버튼을 누르면 메시지가 결과 문구로 바뀝니다.
+5. 승인할 사람을 팀에 등록합니다. 서비스를 담당하는 팀의 구성원만 승인, 거절할 수 있고, 요청한 사람은 자기 요청을 승인할 수 없습니다. 담당 팀이 없는 서비스는 아무도 승인할 수 없습니다.
+
+```yaml
+triagent:
+  access:
+    teams:
+      payments:
+        members: [U012ABCDEF, U034GHIJKL]   # Slack 사용자 ID(프로필 > 멤버 ID 복사)
+        services: [payment-api]
+```
 
 ```bash
 curl -X POST localhost:8080/api/v1/incidents/1/actions \
