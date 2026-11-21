@@ -1,0 +1,12 @@
+# 데모 Prometheus 설정. https://prometheus.io/docs/prometheus/latest/configuration/configuration/
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: payment-api
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["payment-api:8080"]
+        # Triagent는 알림의 service 라벨로 지표를 찾으므로 같은 라벨을 붙입니다.
+        labels:
+          service: payment-api

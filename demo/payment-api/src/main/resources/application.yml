@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: payment-api
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  metrics:
+    distribution:
+      # Triagent의 p95 지연 쿼리(histogram_quantile)가 쓰는 _bucket 지표를 내보냅니다.
+      percentiles-histogram:
+        http.server.requests: true
