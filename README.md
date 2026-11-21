@@ -31,6 +31,7 @@ curl http://localhost:8080/actuator/health
 | 환경 변수 | 설명 | 기본값 |
 | --- | --- | --- |
 | `SLACK_WEBHOOK_URL` | 조사 결과를 보낼 Slack Incoming Webhook URL. 비워 두면 로그로만 남깁니다. | (없음) |
+| `LOKI_URL` | Loki 주소(예: `http://localhost:3100`). 비워 두면 로그 수집을 끕니다. | (없음) |
 | `GITHUB_TOKEN` | GitHub Personal Access Token. 비공개 저장소 조회나 요청 한도(비인증 시간당 60회)를 늘릴 때 필요합니다. | (없음) |
 
 서비스와 GitHub 저장소 연결은 `application.yml`의 `triagent.github.repositories`에 적습니다.
