@@ -57,8 +57,7 @@ public class ActionService {
 	@Transactional
 	public ActionResponse approve(Long actionId, String approver) {
 		RemediationAction action = findAction(actionId);
-		checkCanDecide(approver, action);
-		action.approve(approver, Instant.now());
+		decideOrPublishDenial(action, approver, () -> action.approve(approver, Instant.now()));
 		log.info("Action approved: id={}, approver={}", actionId, approver);
 		eventPublisher.publishEvent(new ActionApprovedEvent(actionId));
 		return ActionResponse.from(action);
@@ -67,9 +66,9 @@ public class ActionService {
 	@Transactional
 	public ActionResponse reject(Long actionId, String rejecter) {
 		RemediationAction action = findAction(actionId);
-		checkCanDecide(rejecter, action);
-		action.reject(rejecter, Instant.now());
+		decideOrPublishDenial(action, rejecter, () -> action.reject(rejecter, Instant.now()));
 		log.info("Action rejected: id={}, rejecter={}", actionId, rejecter);
+		eventPublisher.publishEvent(new ActionRejectedEvent(actionId));
 		return ActionResponse.from(action);
 	}
 
@@ -77,16 +76,32 @@ public class ActionService {
 	public void recordExecuted(Long actionId, String result) {
 		findAction(actionId).markExecuted(result, Instant.now());
 		log.info("Action executed: id={}", actionId);
+		eventPublisher.publishEvent(new ActionFinishedEvent(actionId));
 	}
 
 	@Transactional
 	public void recordFailed(Long actionId, String reason) {
 		findAction(actionId).markFailed(reason, Instant.now());
 		log.warn("Action failed: id={}, reason={}", actionId, reason);
+		eventPublisher.publishEvent(new ActionFinishedEvent(actionId));
 	}
 
 	public ActionResponse getAction(Long actionId) {
 		return ActionResponse.from(findAction(actionId));
+	}
+
+	/**
+	 * 권한이 없으면 거부 이벤트를 발행하고 예외를 다시 던집니다. 예외로 트랜잭션이 롤백되어도 거부 사실은 감사 로그에 남깁니다.
+	 */
+	private void decideOrPublishDenial(RemediationAction action, String userId, Runnable decision) {
+		try {
+			checkCanDecide(userId, action);
+			decision.run();
+		}
+		catch (DecisionNotAllowedException ex) {
+			eventPublisher.publishEvent(new ActionDecisionDeniedEvent(action.getId(), userId, ex.getMessage()));
+			throw ex;
+		}
 	}
 
 	private void checkCanDecide(String userId, RemediationAction action) {
