@@ -29,7 +29,7 @@ class SlackApprovalRequesterTest {
 		RestClient.Builder builder = RestClient.builder();
 		MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
 		SlackApprovalRequester requester = new SlackApprovalRequester(builder,
-				new SlackProperties(URI.create(WEBHOOK_URL)), mock(ActionService.class));
+				new SlackProperties(URI.create(WEBHOOK_URL), null), mock(ActionService.class));
 
 		server.expect(requestTo(WEBHOOK_URL))
 				.andExpect(method(HttpMethod.POST))

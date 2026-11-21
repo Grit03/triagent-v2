@@ -31,7 +31,7 @@ class SlackNotifierTest {
 	void postsBlockKitMessageToWebhook() {
 		RestClient.Builder builder = RestClient.builder();
 		MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
-		SlackNotifier notifier = new SlackNotifier(builder, new SlackProperties(URI.create(WEBHOOK_URL)));
+		SlackNotifier notifier = new SlackNotifier(builder, new SlackProperties(URI.create(WEBHOOK_URL), null));
 
 		server.expect(requestTo(WEBHOOK_URL))
 				.andExpect(method(HttpMethod.POST))
