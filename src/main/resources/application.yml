@@ -14,12 +14,25 @@ spring:
         core-size: 4
         max-size: 8
         queue-capacity: 100
+  http:
+    clients:
+      # RestClient 공통 타임아웃. 장애 상황에서 느린 외부 API 때문에 조사가 무한정 멈추지 않게 합니다.
+      # https://docs.spring.io/spring-boot/reference/io/rest-client.html#io.rest-client.clienthttprequestfactory.configuration
+      connect-timeout: 3s
+      read-timeout: 10s
 
 triagent:
   notification:
     slack:
       # Slack Incoming Webhook URL. 비워 두면 Slack 보고를 끄고 로그로만 남깁니다.
       webhook-url: ${SLACK_WEBHOOK_URL:}
+  github:
+    base-url: https://api.github.com
+    # 공개 저장소는 토큰 없이도 조회되지만, 비인증 요청은 시간당 60회로 제한됩니다.
+    token: ${GITHUB_TOKEN:}
+    lookback: 24h
+    # 장애 알림의 service 라벨 → GitHub 저장소(owner/repo)
+    repositories: {}
 
 # Actuator: 기본으로 health 엔드포인트만 웹에 노출됩니다.
 # https://docs.spring.io/spring-boot/reference/actuator/endpoints.html#actuator.endpoints.exposing
