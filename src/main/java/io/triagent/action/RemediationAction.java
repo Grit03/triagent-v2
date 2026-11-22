@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
+/** 장애는 {@code @ManyToOne} 대신 ID로만 참조합니다. incident 패키지의 엔티티에 직접 의존하지 않기 위해서입니다. */
 @Entity
 @Table(name = "remediation_action")
 @Getter
@@ -84,6 +85,7 @@ public class RemediationAction {
 		return new RemediationAction(incidentId, service, type, reason, requestedBy, requestedAt);
 	}
 
+	/** 요청한 사람은 자기 요청을 승인할 수 없습니다(두 사람 확인 원칙). 거절, 즉 요청 철회는 할 수 있습니다. */
 	public void approve(String approver, Instant decidedAt) {
 		if (approver.equals(requestedBy)) {
 			throw new DecisionNotAllowedException("Requester %s cannot approve their own action".formatted(approver));
@@ -112,6 +114,7 @@ public class RemediationAction {
 		this.decidedAt = decidedAt;
 	}
 
+	/** 실행 결과는 승인된 조치에만 기록할 수 있습니다. 승인 없이 실행된 기록이 남지 않게 합니다. */
 	private void finish(ActionStatus outcome, String result, Instant finishedAt) {
 		if (status != ActionStatus.APPROVED) {
 			throw new IllegalStateException("Action %d is %s, not APPROVED".formatted(id, status));

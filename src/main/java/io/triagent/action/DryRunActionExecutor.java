@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Component;
 
+/** 인프라를 바꾸지 않는 실행기. 결과 메시지에 "드라이런"을 명시해 실제로 실행된 것처럼 보이지 않게 합니다. */
 @Component
 @Slf4j
 public class DryRunActionExecutor implements ActionExecutor {

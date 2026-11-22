@@ -20,6 +20,7 @@ public class PrometheusClient {
 		this.restClient = restClientBuilder.baseUrl(properties.baseUrl().toString()).build();
 	}
 
+	/** 집계(sum 등)된 단일 값을 기대하므로, 여러 시계열이 나오면 첫 번째 값만 씁니다. */
 	public OptionalDouble query(String promQl, Instant time) {
 		PrometheusQueryResponse response = restClient.get()
 				.uri(uri -> uri.path("/api/v1/query")

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import io.triagent.incident.IncidentService;
 import io.triagent.incident.IncidentSnapshot;
 
+/** 외부 API 호출이 길어질 수 있으므로 DB 트랜잭션을 걸지 않습니다. */
 @Service
 @Slf4j
 @RequiredArgsConstructor

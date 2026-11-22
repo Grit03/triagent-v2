@@ -13,6 +13,10 @@ import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import io.triagent.investigation.IncidentAnalyzer;
 
+/**
+ * Claude 분석이 불가능하거나 실패하면 규칙 기반 요약으로 대체합니다. LLM이 멈춰도 장애 보고는 나가야 하기 때문입니다.
+ * IncidentAnalyzer 빈이 여러 개이므로 {@code @Primary}로 이 구현체를 기본 주입 대상으로 지정합니다.
+ */
 @Primary
 @Component
 @Slf4j

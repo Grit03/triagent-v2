@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+/** 실행기 호출에는 DB 트랜잭션을 걸지 않고, 결과 기록만 ActionService의 짧은 트랜잭션으로 남깁니다. */
 @Component
 @Slf4j
 @RequiredArgsConstructor

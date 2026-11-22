@@ -64,6 +64,7 @@ public class SlackInteractionService {
 		}
 	}
 
+	/** response_url로 보내면 버튼이 있던 메시지가 결과 문구로 바뀌어, 같은 버튼을 다시 누를 수 없게 됩니다. */
 	void replaceOriginalMessage(String responseUrl, String text) {
 		restClient.post()
 				.uri(responseUrl)

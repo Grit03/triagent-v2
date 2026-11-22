@@ -16,9 +16,15 @@ import org.springframework.stereotype.Component;
 
 import io.triagent.notification.SlackProperties;
 
+/**
+ * 서명 = "v0=" + hex(HMAC-SHA256(signingSecret, "v0:" + 타임스탬프 + ":" + 원본 요청 본문))
+ * <p>
+ * https://docs.slack.dev/authentication/verifying-requests-from-slack
+ */
 @Component
 class SlackSignatureVerifier {
 
+	/** 오래된 요청을 다시 보내는 재전송 공격(replay attack)을 막기 위한 허용 시간 */
 	static final Duration MAX_REQUEST_AGE = Duration.ofMinutes(5);
 
 	private final String signingSecret;
