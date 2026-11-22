@@ -49,7 +49,7 @@ class ActionExecutionTest {
 		Long incidentId = incidentService.openIfAbsent(new OpenIncidentCommand("exec-" + System.nanoTime(),
 				"HighErrorRate", "payment-api", "critical", null, Instant.parse("2026-11-21T01:00:00Z")))
 				.orElseThrow();
-		actionId = actionService.request(incidentId, new CreateActionRequest(ActionType.ROLLBACK, "U_ONCALL", null))
+		actionId = actionService.request(incidentId, new CreateActionRequest(ActionType.ROLLBACK, null), "U_ONCALL")
 				.id();
 	}
 

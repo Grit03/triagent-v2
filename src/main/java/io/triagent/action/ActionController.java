@@ -24,6 +24,12 @@ public class ActionController {
 
 	private final ActionService actionService;
 
+	/**
+	 * 이 API로 들어온 요청의 요청자. 인증이 없어 호출한 사람을 알 수 없으므로, 누구인지 지어내지 않고 경로만 기록합니다.
+	 * Slack 사용자 ID가 아니므로 담당 팀원 누구나 승인할 수 있습니다(에이전트 요청과 같은 규칙).
+	 */
+	static final String API_ACTOR = "api";
+
 	public ActionController(ActionService actionService) {
 		this.actionService = actionService;
 	}
@@ -32,7 +38,7 @@ public class ActionController {
 	@PostMapping("/incidents/{incidentId}/actions")
 	public ResponseEntity<ActionResponse> requestAction(@PathVariable Long incidentId,
 			@Valid @RequestBody CreateActionRequest request) {
-		ActionResponse action = actionService.request(incidentId, request);
+		ActionResponse action = actionService.request(incidentId, request, API_ACTOR);
 		URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
 				.path("/api/v1/actions/{id}")
 				.buildAndExpand(action.id())

@@ -81,13 +81,13 @@ class ClaudeIncidentAnalyzerTest {
 		BetaMessage finalResponse = textResponse("*권장 조치*: 조치 7(롤백) 승인 요청");
 		given(client.beta().messages().create(any(MessageCreateParams.class)))
 				.willReturn(toolUseResponse, finalResponse);
-		given(actionService.request(any(), any())).willReturn(actionWithId(7L));
+		given(actionService.request(any(), any(), any())).willReturn(actionWithId(7L));
 
 		String analysis = analyzer.analyze(INCIDENT, List.of());
 
 		assertThat(analysis).isEqualTo("*권장 조치*: 조치 7(롤백) 승인 요청");
 		verify(actionService).request(1L,
-				new CreateActionRequest(ActionType.ROLLBACK, "triagent-agent", "a1b2c3d 배포 직후 5xx 증가"));
+				new CreateActionRequest(ActionType.ROLLBACK, "a1b2c3d 배포 직후 5xx 증가"), "triagent-agent");
 		ArgumentCaptor<MessageCreateParams> captor = ArgumentCaptor.forClass(MessageCreateParams.class);
 		verify(client.beta().messages(), times(2)).create(captor.capture());
 		MessageCreateParams firstRequest = captor.getAllValues().get(0);
@@ -112,7 +112,7 @@ class ClaudeIncidentAnalyzerTest {
 		BetaMessage finalResponse = textResponse("조치 요청에 실패해 수동 확인이 필요합니다.");
 		given(client.beta().messages().create(any(MessageCreateParams.class)))
 				.willReturn(toolUseResponse, finalResponse);
-		given(actionService.request(any(), any())).willThrow(new IllegalStateException("db down"));
+		given(actionService.request(any(), any(), any())).willThrow(new IllegalStateException("db down"));
 
 		assertThat(analyzer.analyze(INCIDENT, List.of())).isEqualTo("조치 요청에 실패해 수동 확인이 필요합니다.");
 	}

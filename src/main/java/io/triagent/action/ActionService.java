@@ -37,13 +37,15 @@ public class ActionService {
 
 	/**
 	 * 조치를 승인 대기 상태로 저장합니다. 요청만으로는 아무것도 실행되지 않습니다.
+	 *
+	 * @param requestedBy 서버가 확인한 요청자(예: {@code triagent-agent}). 요청 본문의 값을 그대로 넘기면 안 됩니다.
 	 */
 	@Transactional
-	public ActionResponse request(Long incidentId, CreateActionRequest request) {
+	public ActionResponse request(Long incidentId, CreateActionRequest request, String requestedBy) {
 		IncidentSnapshot incident = incidentService.findSnapshot(incidentId)
 				.orElseThrow(() -> new IncidentNotFoundException(incidentId));
 		RemediationAction action = RemediationAction.request(incidentId, incident.service(), request.type(),
-				request.reason(), request.requestedBy(), Instant.now());
+				request.reason(), requestedBy, Instant.now());
 		RemediationAction saved = actionRepository.save(action);
 		log.info("Action requested: id={}, incidentId={}, type={}, service={}, requestedBy={}", saved.getId(),
 				incidentId, saved.getType(), saved.getService(), saved.getRequestedBy());

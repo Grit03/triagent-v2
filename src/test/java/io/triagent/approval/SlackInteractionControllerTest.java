@@ -65,7 +65,7 @@ class SlackInteractionControllerTest {
 		Long incidentId = incidentService.openIfAbsent(new OpenIncidentCommand("slack-" + System.nanoTime(),
 				"HighErrorRate", "payment-api", "critical", null, Instant.parse("2026-11-21T01:00:00Z")))
 				.orElseThrow();
-		actionId = actionService.request(incidentId, new CreateActionRequest(ActionType.RESTART, "U_ONCALL", null))
+		actionId = actionService.request(incidentId, new CreateActionRequest(ActionType.RESTART, null), "U_ONCALL")
 				.id();
 	}
 

@@ -93,11 +93,11 @@ class AgentEvalTest {
 		for (int run = 0; run < repeat; run++) {
 			Set<ActionType> proposed = EnumSet.noneOf(ActionType.class);
 			ActionService actionService = mock(ActionService.class);
-			given(actionService.request(any(), any())).willAnswer(invocation -> {
+			given(actionService.request(any(), any(), any())).willAnswer(invocation -> {
 				CreateActionRequest request = invocation.getArgument(1);
 				proposed.add(request.type());
 				return new ActionResponse((long) proposed.size(), 1L, "payment-api", request.type(), request.reason(),
-						ActionStatus.PENDING, request.requestedBy(), Instant.now(), null, null, null, null);
+						ActionStatus.PENDING, invocation.getArgument(2), Instant.now(), null, null, null, null);
 			});
 			try {
 				new ClaudeIncidentAnalyzer(client, properties, actionService).analyze(scenario.incident(),
