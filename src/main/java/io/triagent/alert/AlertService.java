@@ -3,6 +3,8 @@ package io.triagent.alert;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import io.triagent.alert.AlertmanagerWebhookRequest.Alert;
@@ -16,13 +18,10 @@ import io.triagent.incident.OpenIncidentCommand;
  * 새 Controller와 Service만 추가하면 되고 incident 패키지는 바뀌지 않습니다.
  */
 @Service
+@RequiredArgsConstructor
 public class AlertService {
 
 	private final IncidentService incidentService;
-
-	public AlertService(IncidentService incidentService) {
-		this.incidentService = incidentService;
-	}
 
 	/**
 	 * 알림마다 IncidentService가 따로 트랜잭션을 엽니다. 한 알림이 실패해도 앞서 처리한 알림은 그대로 남고,

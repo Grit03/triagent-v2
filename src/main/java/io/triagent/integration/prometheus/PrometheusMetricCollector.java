@@ -7,8 +7,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.OptionalDouble;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
@@ -23,20 +24,15 @@ import io.triagent.investigation.Evidence;
  */
 @Component
 @ConditionalOnExpression("'${triagent.prometheus.base-url:}' != ''")
+@Slf4j
+@RequiredArgsConstructor
 public class PrometheusMetricCollector implements ContextCollector {
 
 	static final String SOURCE = "prometheus";
 
-	private static final Logger log = LoggerFactory.getLogger(PrometheusMetricCollector.class);
-
 	private final PrometheusClient prometheusClient;
 
 	private final PrometheusProperties properties;
-
-	public PrometheusMetricCollector(PrometheusClient prometheusClient, PrometheusProperties properties) {
-		this.prometheusClient = prometheusClient;
-		this.properties = properties;
-	}
 
 	@Override
 	public String source() {

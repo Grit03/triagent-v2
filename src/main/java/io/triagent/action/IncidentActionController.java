@@ -2,6 +2,8 @@ package io.triagent.action;
 
 import java.net.URI;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +21,7 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/v1/incidents/{incidentId}/actions")
+@RequiredArgsConstructor
 public class IncidentActionController {
 
 	/**
@@ -28,10 +31,6 @@ public class IncidentActionController {
 	static final String API_ACTOR = "api";
 
 	private final ActionService actionService;
-
-	public IncidentActionController(ActionService actionService) {
-		this.actionService = actionService;
-	}
 
 	/** 새 리소스를 만들면 201 Created와 함께 조회 주소를 Location 헤더로 알려 줍니다. */
 	@PostMapping

@@ -3,8 +3,9 @@ package io.triagent.investigation;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import io.triagent.incident.IncidentService;
@@ -17,9 +18,9 @@ import io.triagent.incident.IncidentSnapshot;
  * 수집, 분석, 전송은 이 패키지의 인터페이스로만 호출하므로 investigation은 구현 패키지를 알지 못합니다.
  */
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class InvestigationService {
-
-	private static final Logger log = LoggerFactory.getLogger(InvestigationService.class);
 
 	private final IncidentService incidentService;
 
@@ -28,14 +29,6 @@ public class InvestigationService {
 	private final IncidentAnalyzer analyzer;
 
 	private final List<Notifier> notifiers;
-
-	public InvestigationService(IncidentService incidentService, List<ContextCollector> collectors,
-			IncidentAnalyzer analyzer, List<Notifier> notifiers) {
-		this.incidentService = incidentService;
-		this.collectors = collectors;
-		this.analyzer = analyzer;
-		this.notifiers = notifiers;
-	}
 
 	public void investigate(Long incidentId) {
 		Optional<IncidentSnapshot> found = incidentService.findSnapshot(incidentId);

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +22,7 @@ import tools.jackson.databind.json.JsonMapper;
  * Spring이 폼 파라미터를 다시 인코딩한 본문을 줄 수 있어, 서블릿 입력 스트림에서 원본을 직접 읽습니다.
  */
 @RestController
+@RequiredArgsConstructor
 public class SlackInteractionController {
 
 	private static final String PAYLOAD_FIELD = "payload=";
@@ -29,13 +32,6 @@ public class SlackInteractionController {
 	private final SlackInteractionService interactionService;
 
 	private final JsonMapper jsonMapper;
-
-	public SlackInteractionController(SlackSignatureVerifier signatureVerifier,
-			SlackInteractionService interactionService, JsonMapper jsonMapper) {
-		this.signatureVerifier = signatureVerifier;
-		this.interactionService = interactionService;
-		this.jsonMapper = jsonMapper;
-	}
 
 	@PostMapping(path = "/api/v1/slack/interactions", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public ResponseEntity<Void> receive(

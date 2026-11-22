@@ -1,5 +1,7 @@
 package io.triagent.access;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,13 +10,10 @@ import org.springframework.stereotype.Component;
  * 서비스를 담당하는 팀이 설정되어 있지 않으면 아무도 결정할 수 없습니다. 설정을 빠뜨렸을 때 누구나 승인할 수 있게 되는 것보다 안전하기 때문입니다.
  */
 @Component
+@RequiredArgsConstructor
 public class ServiceAccessPolicy {
 
 	private final AccessProperties properties;
-
-	public ServiceAccessPolicy(AccessProperties properties) {
-		this.properties = properties;
-	}
 
 	public boolean canDecide(String userId, String service) {
 		return properties.teams().values().stream()

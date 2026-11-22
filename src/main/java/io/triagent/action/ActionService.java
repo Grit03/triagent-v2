@@ -2,8 +2,9 @@ package io.triagent.action;
 
 import java.time.Instant;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,9 +16,9 @@ import io.triagent.incident.IncidentSnapshot;
 
 @Service
 @Transactional(readOnly = true)
+@Slf4j
+@RequiredArgsConstructor
 public class ActionService {
-
-	private static final Logger log = LoggerFactory.getLogger(ActionService.class);
 
 	private final RemediationActionRepository actionRepository;
 
@@ -26,14 +27,6 @@ public class ActionService {
 	private final ServiceAccessPolicy accessPolicy;
 
 	private final ApplicationEventPublisher eventPublisher;
-
-	public ActionService(RemediationActionRepository actionRepository, IncidentService incidentService,
-			ServiceAccessPolicy accessPolicy, ApplicationEventPublisher eventPublisher) {
-		this.actionRepository = actionRepository;
-		this.incidentService = incidentService;
-		this.accessPolicy = accessPolicy;
-		this.eventPublisher = eventPublisher;
-	}
 
 	/**
 	 * 조치를 승인 대기 상태로 저장합니다. 요청만으로는 아무것도 실행되지 않습니다.

@@ -1,7 +1,8 @@
 package io.triagent.action;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -12,18 +13,13 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * 실행기 호출에는 DB 트랜잭션을 걸지 않고, 결과 기록만 ActionService의 짧은 트랜잭션으로 남깁니다.
  */
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class ActionExecutionListener {
-
-	private static final Logger log = LoggerFactory.getLogger(ActionExecutionListener.class);
 
 	private final ActionService actionService;
 
 	private final ActionExecutor actionExecutor;
-
-	public ActionExecutionListener(ActionService actionService, ActionExecutor actionExecutor) {
-		this.actionService = actionService;
-		this.actionExecutor = actionExecutor;
-	}
 
 	@Async
 	@TransactionalEventListener

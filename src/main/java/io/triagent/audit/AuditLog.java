@@ -2,6 +2,10 @@ package io.triagent.audit;
 
 import java.time.Instant;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,6 +21,8 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "audit_log", indexes = @Index(name = "idx_audit_log_incident", columnList = "incidentId, occurredAt"))
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AuditLog {
 
 	private static final int MAX_DETAIL_LENGTH = 1000;
@@ -45,9 +51,6 @@ public class AuditLog {
 	@Column(updatable = false, length = MAX_DETAIL_LENGTH)
 	private String detail;
 
-	protected AuditLog() {
-	}
-
 	private AuditLog(Instant occurredAt, String actor, AuditEventType type, Long incidentId, Long actionId,
 			String detail) {
 		this.occurredAt = occurredAt;
@@ -62,33 +65,5 @@ public class AuditLog {
 	public static AuditLog of(Instant occurredAt, String actor, AuditEventType type, Long incidentId, Long actionId,
 			String detail) {
 		return new AuditLog(occurredAt, actor, type, incidentId, actionId, detail);
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public Instant getOccurredAt() {
-		return occurredAt;
-	}
-
-	public String getActor() {
-		return actor;
-	}
-
-	public AuditEventType getType() {
-		return type;
-	}
-
-	public Long getIncidentId() {
-		return incidentId;
-	}
-
-	public Long getActionId() {
-		return actionId;
-	}
-
-	public String getDetail() {
-		return detail;
 	}
 }

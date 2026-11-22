@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +20,7 @@ import io.triagent.investigation.Evidence;
  */
 @Component
 @ConditionalOnExpression("'${triagent.loki.base-url:}' != ''")
+@RequiredArgsConstructor
 public class LokiLogCollector implements ContextCollector {
 
 	static final String SOURCE = "loki";
@@ -28,11 +31,6 @@ public class LokiLogCollector implements ContextCollector {
 	private final LokiClient lokiClient;
 
 	private final LokiProperties properties;
-
-	public LokiLogCollector(LokiClient lokiClient, LokiProperties properties) {
-		this.lokiClient = lokiClient;
-		this.properties = properties;
-	}
 
 	@Override
 	public String source() {
@@ -54,7 +52,6 @@ public class LokiLogCollector implements ContextCollector {
 				.collect(Collectors.joining("\n"));
 		return Evidence.success(SOURCE, "에러 로그 %d건 (최신순)\n%s".formatted(lines.size(), body));
 	}
-
 
 	private static String truncate(String line) {
 		String singleLine = line.replace('\n', ' ');
