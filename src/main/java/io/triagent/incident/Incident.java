@@ -27,6 +27,13 @@ public class Incident {
 	@Column(nullable = false, length = 64)
 	private String fingerprint;
 
+	/**
+	 * 열려 있는 동안에만 fingerprint와 같은 값을 갖고, 해소되면 null이 됩니다.
+	 * 이 컬럼의 unique 제약이 같은 알림으로 장애가 동시에 두 건 열리는 것을 막습니다(V3 마이그레이션).
+	 */
+	@Column(length = 64, unique = true)
+	private String openFingerprint;
+
 	@Column(nullable = false)
 	private String alertName;
 
@@ -55,6 +62,7 @@ public class Incident {
 	private Incident(String fingerprint, String alertName, String service, String severity, String summary,
 			Instant startedAt) {
 		this.fingerprint = fingerprint;
+		this.openFingerprint = fingerprint;
 		this.alertName = alertName;
 		this.service = service;
 		this.severity = severity;
@@ -73,6 +81,7 @@ public class Incident {
 			return;
 		}
 		this.status = IncidentStatus.RESOLVED;
+		this.openFingerprint = null;
 		this.resolvedAt = resolvedAt;
 	}
 
