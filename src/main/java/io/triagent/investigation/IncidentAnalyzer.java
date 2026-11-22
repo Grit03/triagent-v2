@@ -1,10 +1,9 @@
 package io.triagent.investigation;
 
-import java.util.List;
-
 import io.triagent.incident.IncidentSnapshot;
+import java.util.List;
 
 public interface IncidentAnalyzer {
 
-	String analyze(IncidentSnapshot incident, List<Evidence> evidences);
+    String analyze(IncidentSnapshot incident, List<Evidence> evidences);
 }

@@ -8,8 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @ConfigurationPropertiesScan
 public class TriagentApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TriagentApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(TriagentApplication.class, args);
+    }
 }

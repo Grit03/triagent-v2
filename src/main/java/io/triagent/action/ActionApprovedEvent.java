@@ -1,4 +1,3 @@
 package io.triagent.action;
 
-public record ActionApprovedEvent(Long actionId) {
-}
+public record ActionApprovedEvent(Long actionId) {}

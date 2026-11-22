@@ -1,55 +1,55 @@
 package io.triagent.integration.loki;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.stereotype.Component;
-
 import io.triagent.incident.IncidentSnapshot;
 import io.triagent.integration.LabelValues;
 import io.triagent.integration.loki.LokiClient.LogLine;
 import io.triagent.investigation.ContextCollector;
 import io.triagent.investigation.Evidence;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnExpression("'${triagent.loki.base-url:}' != ''")
 @RequiredArgsConstructor
 public class LokiLogCollector implements ContextCollector {
 
-	static final String SOURCE = "loki";
+    static final String SOURCE = "loki";
 
-	private static final int MAX_LINE_LENGTH = 200;
+    private static final int MAX_LINE_LENGTH = 200;
 
-	private final LokiClient lokiClient;
+    private final LokiClient lokiClient;
 
-	private final LokiProperties properties;
+    private final LokiProperties properties;
 
-	@Override
-	public String source() {
-		return SOURCE;
-	}
+    @Override
+    public String source() {
+        return SOURCE;
+    }
 
-	@Override
-	public Evidence collect(IncidentSnapshot incident) {
-		String logQl = properties.query().formatted(LabelValues.escape(incident.service()));
-		Instant start = incident.startedAt().minus(properties.lookback());
-		Instant end = Instant.now();
-		List<LogLine> lines = lokiClient.queryRange(logQl, start, end, properties.limit());
-		if (lines.isEmpty()) {
-			return Evidence.success(SOURCE, "에러 로그가 없습니다. (`%s`)".formatted(logQl));
-		}
-		String body = lines.stream()
-				.map(line -> "- %s %s".formatted(line.timestamp(), truncate(line.line())))
-				.collect(Collectors.joining("\n"));
-		return Evidence.success(SOURCE, "에러 로그 %d건 (최신순)\n%s".formatted(lines.size(), body));
-	}
+    @Override
+    public Evidence collect(IncidentSnapshot incident) {
+        String logQl = properties.query().formatted(LabelValues.escape(incident.service()));
+        Instant start = incident.startedAt().minus(properties.lookback());
+        Instant end = Instant.now();
+        List<LogLine> lines = lokiClient.queryRange(logQl, start, end, properties.limit());
+        if (lines.isEmpty()) {
+            return Evidence.success(SOURCE, "에러 로그가 없습니다. (`%s`)".formatted(logQl));
+        }
+        String body =
+                lines.stream()
+                        .map(line -> "- %s %s".formatted(line.timestamp(), truncate(line.line())))
+                        .collect(Collectors.joining("\n"));
+        return Evidence.success(SOURCE, "에러 로그 %d건 (최신순)\n%s".formatted(lines.size(), body));
+    }
 
-	private static String truncate(String line) {
-		String singleLine = line.replace('\n', ' ');
-		return singleLine.length() <= MAX_LINE_LENGTH ? singleLine : singleLine.substring(0, MAX_LINE_LENGTH) + "...";
-	}
+    private static String truncate(String line) {
+        String singleLine = line.replace('\n', ' ');
+        return singleLine.length() <= MAX_LINE_LENGTH
+                ? singleLine
+                : singleLine.substring(0, MAX_LINE_LENGTH) + "...";
+    }
 }
