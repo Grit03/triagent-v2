@@ -1,11 +1,5 @@
 package io.triagent.incident;
 
-import java.time.Instant;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,72 +9,91 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "incident", indexes = @Index(name = "idx_incident_fingerprint_status", columnList = "fingerprint, status"))
+@Table(
+        name = "incident",
+        indexes =
+                @Index(
+                        name = "idx_incident_fingerprint_status",
+                        columnList = "fingerprint, status"))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Incident {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@Column(nullable = false, length = 64)
-	private String fingerprint;
+    @Column(nullable = false, length = 64)
+    private String fingerprint;
 
-	/**
-	 * 열려 있는 동안에만 fingerprint와 같은 값을 갖고, 해소되면 null이 됩니다.
-	 * 이 컬럼의 unique 제약이 같은 알림으로 장애가 동시에 두 건 열리는 것을 막습니다(V3 마이그레이션).
-	 */
-	@Column(length = 64, unique = true)
-	@Getter(AccessLevel.NONE)
-	private String openFingerprint;
+    /**
+     * 열려 있는 동안에만 fingerprint와 같은 값을 갖고, 해소되면 null이 됩니다. 이 컬럼의 unique 제약이 같은 알림으로 장애가 동시에 두 건 열리는 것을
+     * 막습니다(V3 마이그레이션).
+     */
+    @Column(length = 64, unique = true)
+    @Getter(AccessLevel.NONE)
+    private String openFingerprint;
 
-	@Column(nullable = false)
-	private String alertName;
+    @Column(nullable = false)
+    private String alertName;
 
-	@Column(nullable = false)
-	private String service;
+    @Column(nullable = false)
+    private String service;
 
-	@Column(nullable = false, length = 32)
-	private String severity;
+    @Column(nullable = false, length = 32)
+    private String severity;
 
-	@Column(length = 1000)
-	private String summary;
+    @Column(length = 1000)
+    private String summary;
 
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, length = 16)
-	private IncidentStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private IncidentStatus status;
 
-	@Column(nullable = false)
-	private Instant startedAt;
+    @Column(nullable = false)
+    private Instant startedAt;
 
-	private Instant resolvedAt;
+    private Instant resolvedAt;
 
-	private Incident(String fingerprint, String alertName, String service, String severity, String summary,
-			Instant startedAt) {
-		this.fingerprint = fingerprint;
-		this.openFingerprint = fingerprint;
-		this.alertName = alertName;
-		this.service = service;
-		this.severity = severity;
-		this.summary = summary;
-		this.startedAt = startedAt;
-		this.status = IncidentStatus.OPEN;
-	}
+    private Incident(
+            String fingerprint,
+            String alertName,
+            String service,
+            String severity,
+            String summary,
+            Instant startedAt) {
+        this.fingerprint = fingerprint;
+        this.openFingerprint = fingerprint;
+        this.alertName = alertName;
+        this.service = service;
+        this.severity = severity;
+        this.summary = summary;
+        this.startedAt = startedAt;
+        this.status = IncidentStatus.OPEN;
+    }
 
-	public static Incident open(String fingerprint, String alertName, String service, String severity,
-			String summary, Instant startedAt) {
-		return new Incident(fingerprint, alertName, service, severity, summary, startedAt);
-	}
+    public static Incident open(
+            String fingerprint,
+            String alertName,
+            String service,
+            String severity,
+            String summary,
+            Instant startedAt) {
+        return new Incident(fingerprint, alertName, service, severity, summary, startedAt);
+    }
 
-	public void resolve(Instant resolvedAt) {
-		if (status == IncidentStatus.RESOLVED) {
-			return;
-		}
-		this.status = IncidentStatus.RESOLVED;
-		this.openFingerprint = null;
-		this.resolvedAt = resolvedAt;
-	}
+    public void resolve(Instant resolvedAt) {
+        if (status == IncidentStatus.RESOLVED) {
+            return;
+        }
+        this.status = IncidentStatus.RESOLVED;
+        this.openFingerprint = null;
+        this.resolvedAt = resolvedAt;
+    }
 }

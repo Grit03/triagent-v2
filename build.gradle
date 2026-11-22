@@ -1,7 +1,8 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '4.2.0'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '4.2.0'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.diffplug.spotless' version '8.11.0'
 }
 
 group = 'io.triagent'
@@ -9,62 +10,74 @@ version = '0.0.1-SNAPSHOT'
 description = 'Incident response agent for dev teams'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-flyway'
-	implementation 'org.flywaydb:flyway-database-postgresql'
-	implementation 'org.springframework.boot:spring-boot-starter-restclient'
-	implementation 'com.anthropic:anthropic-java:3.3.0'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	runtimeOnly 'com.h2database:h2'
-	runtimeOnly 'org.postgresql:postgresql'
-	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
-	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
-	testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
-	testImplementation 'org.testcontainers:testcontainers-postgresql'
-	testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-	testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.1'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'org.springframework.boot:spring-boot-starter-restclient'
+    implementation 'com.anthropic:anthropic-java:3.3.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'org.postgresql:postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-starter-restclient-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// 코드 포맷: google-java-format의 AOSP 스타일(4칸 들여쓰기)
+// ./gradlew spotlessApply 로 고치고, build(check)에 포함된 spotlessCheck가 어긋난 코드를 막습니다.
+spotless {
+    java {
+        target 'src/*/java/**/*.java'
+        googleJavaFormat().aosp()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
 
 tasks.named('test') {
-	useJUnitPlatform {
-		// 실제 Claude API를 호출하는 평가는 비용이 들어 기본 테스트와 CI에서 제외합니다.
-		excludeTags 'eval'
-	}
+    useJUnitPlatform {
+        // 실제 Claude API를 호출하는 평가는 비용이 들어 기본 테스트와 CI에서 제외합니다.
+        excludeTags 'eval'
+    }
 }
 
 // 에이전트 회귀 평가(F14). ANTHROPIC_API_KEY가 필요하고 호출 비용이 듭니다.
 // 예: ./gradlew eval -Peval.model=claude-opus-5-5 -Peval.repeat=5
 tasks.register('eval', Test) {
-	description = 'Runs agent evaluation scenarios against the real Claude API.'
-	group = 'verification'
-	testClassesDirs = sourceSets.test.output.classesDirs
-	classpath = sourceSets.test.runtimeClasspath
-	useJUnitPlatform {
-		includeTags 'eval'
-	}
-	systemProperties providers.gradlePropertiesPrefixedBy('eval.').get()
-	// 같은 입력이어도 모델 응답이 달라지므로 매번 새로 실행합니다.
-	outputs.upToDateWhen { false }
-	testLogging {
-		showStandardStreams = true
-	}
+    description = 'Runs agent evaluation scenarios against the real Claude API.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'eval'
+    }
+    systemProperties providers.gradlePropertiesPrefixedBy('eval.').get()
+    // 같은 입력이어도 모델 응답이 달라지므로 매번 새로 실행합니다.
+    outputs.upToDateWhen { false }
+    testLogging {
+        showStandardStreams = true
+    }
 }

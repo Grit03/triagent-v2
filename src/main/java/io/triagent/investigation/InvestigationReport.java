@@ -1,8 +1,7 @@
 package io.triagent.investigation;
 
+import io.triagent.incident.IncidentSnapshot;
 import java.util.List;
 
-import io.triagent.incident.IncidentSnapshot;
-
-public record InvestigationReport(IncidentSnapshot incident, List<Evidence> evidences, String analysis) {
-}
+public record InvestigationReport(
+        IncidentSnapshot incident, List<Evidence> evidences, String analysis) {}

@@ -1,7 +1,6 @@
 package io.triagent.action;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,10 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ActionController {
 
-	private final ActionService actionService;
+    private final ActionService actionService;
 
-	@GetMapping("/{actionId}")
-	public ActionResponse getAction(@PathVariable Long actionId) {
-		return actionService.getAction(actionId);
-	}
+    @GetMapping("/{actionId}")
+    public ActionResponse getAction(@PathVariable Long actionId) {
+        return actionService.getAction(actionId);
+    }
 }

@@ -1,9 +1,9 @@
 package io.triagent.action;
 
 public enum ActionStatus {
-	PENDING,
-	APPROVED,
-	REJECTED,
-	EXECUTED,
-	FAILED
+    PENDING,
+    APPROVED,
+    REJECTED,
+    EXECUTED,
+    FAILED
 }

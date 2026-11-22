@@ -5,9 +5,7 @@ import java.util.Map;
 
 public record LokiQueryResponse(String status, Data data) {
 
-	public record Data(String resultType, List<Stream> result) {
-	}
+    public record Data(String resultType, List<Stream> result) {}
 
-	public record Stream(Map<String, String> stream, List<List<String>> values) {
-	}
+    public record Stream(Map<String, String> stream, List<List<String>> values) {}
 }
