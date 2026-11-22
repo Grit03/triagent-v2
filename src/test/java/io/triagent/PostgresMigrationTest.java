@@ -44,7 +44,7 @@ class PostgresMigrationTest {
 	@DisplayName("PostgreSQL에 마이그레이션이 적용되고 엔티티와 스키마가 일치한다")
 	void migrate() {
 		assertThat(flyway.info().applied()).extracting(migration -> migration.getVersion().getVersion())
-				.containsExactly("1", "2");
+				.containsExactly("1", "2", "3");
 
 		Long incidentId = incidentService.openIfAbsent(new OpenIncidentCommand("pg-fingerprint", "HighErrorRate",
 				"payment-api", "critical", "5xx > 5%", Instant.parse("2026-11-21T01:00:00Z"))).orElseThrow();

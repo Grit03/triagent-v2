@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import io.triagent.alert.AlertmanagerWebhookRequest.Alert;
 import io.triagent.incident.IncidentService;
@@ -26,9 +25,9 @@ public class AlertService {
 	}
 
 	/**
-	 * 한 요청 안의 알림은 하나의 트랜잭션으로 처리합니다. IncidentService의 트랜잭션은 이 트랜잭션에 합류합니다.
+	 * 알림마다 IncidentService가 따로 트랜잭션을 엽니다. 한 알림이 실패해도 앞서 처리한 알림은 그대로 남고,
+	 * Alertmanager가 실패한 요청을 다시 보내도 장애 열기와 해소는 같은 결과를 내므로 안전합니다.
 	 */
-	@Transactional
 	public AlertReceiptResponse receive(AlertmanagerWebhookRequest request) {
 		List<Long> openedIncidentIds = new ArrayList<>();
 		List<Long> resolvedIncidentIds = new ArrayList<>();
@@ -38,7 +37,7 @@ public class AlertService {
 			}
 			else {
 				incidentService.resolveIfOpen(alert.fingerprint(), alert.resolvedAt())
-						.ifPresent(resolvedIncidentIds::add);
+						.forEach(resolvedIncidentIds::add);
 			}
 		}
 		return new AlertReceiptResponse(openedIncidentIds, resolvedIncidentIds);
