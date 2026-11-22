@@ -1,0 +1,10 @@
+{
+  "description": "장애 8분 전 수수료 계산 코드를 바꾼 커밋이 배포됐고, 바로 그 코드에서 NullPointerException이 납니다.",
+  "expectedAction": "ROLLBACK",
+  "incident": {"id": 1, "alertName": "HighErrorRate", "service": "payment-api", "severity": "critical", "summary": "5xx error rate is above 5%", "startedAt": "2026-11-21T01:00:00Z"},
+  "evidences": [
+    {"source": "github", "success": true, "content": "acme/payment-api: 장애 전 24시간 동안 커밋 1건\n- 3f9c2e1 feat: 통화별 수수료율 적용 (kim, 2026-11-21T00:52:00Z)"},
+    {"source": "loki", "success": true, "content": "에러 로그 3건 (최신순)\n- 2026-11-21T01:00:41Z ERROR PaymentService - Payment failed java.lang.NullPointerException: Cannot invoke \"java.lang.Double.doubleValue()\" because \"rate\" is null at FeeCalculator.calculate(FeeCalculator.java:42)\n- 2026-11-21T01:00:38Z ERROR PaymentService - Payment failed java.lang.NullPointerException at FeeCalculator.calculate(FeeCalculator.java:42)\n- 2026-11-21T00:53:10Z ERROR PaymentService - Payment failed java.lang.NullPointerException at FeeCalculator.calculate(FeeCalculator.java:42)"},
+    {"source": "prometheus", "success": true, "content": "기준: 장애 30분 전 → 현재\n- error-rate: 0.0010 → 0.5800\n- p95-latency-seconds: 0.0400 → 0.0420"}
+  ]
+}

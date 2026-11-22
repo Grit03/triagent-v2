@@ -1,0 +1,10 @@
+{
+  "description": "저장소는 연결되지 않았지만, 에러 로그에 방금 배포된 새 버전이 찍혀 있고 그 버전의 코드에서만 에러가 납니다.",
+  "expectedAction": "ROLLBACK",
+  "incident": {"id": 1, "alertName": "HighErrorRate", "service": "payment-api", "severity": "critical", "summary": "5xx error rate is above 5%", "startedAt": "2026-11-21T01:00:00Z"},
+  "evidences": [
+    {"source": "github", "success": false, "content": "서비스 'payment-api'에 연결된 저장소가 없습니다."},
+    {"source": "loki", "success": true, "content": "에러 로그 2건 (최신순)\n- 2026-11-21T01:00:41Z ERROR PaymentApiApplication - Payment failed (version=1.8.0, deployedAt=2026-11-21T00:58:30Z) java.lang.NullPointerException: Cannot invoke \"java.lang.Double.doubleValue()\" because \"rate\" is null at PaymentApiApplication.calculateFee(PaymentApiApplication.java:71)\n- 2026-11-21T00:58:44Z ERROR PaymentApiApplication - Payment failed (version=1.8.0, deployedAt=2026-11-21T00:58:30Z) java.lang.NullPointerException at PaymentApiApplication.calculateFee(PaymentApiApplication.java:71)"},
+    {"source": "prometheus", "success": true, "content": "기준: 장애 30분 전 → 현재\n- error-rate: 0.0000 → 0.6100\n- p95-latency-seconds: 0.0035 → 0.0038"}
+  ]
+}

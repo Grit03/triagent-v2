@@ -1,0 +1,10 @@
+{
+  "description": "배포 없이 응답이 점점 느려지다 힙 부족 에러가 납니다. 재시작으로 메모리를 비우는 것이 당장의 조치입니다.",
+  "expectedAction": "RESTART",
+  "incident": {"id": 1, "alertName": "HighErrorRate", "service": "payment-api", "severity": "critical", "summary": "5xx error rate is above 5%", "startedAt": "2026-11-21T01:00:00Z"},
+  "evidences": [
+    {"source": "github", "success": true, "content": "acme/payment-api: 장애 전 24시간 동안 커밋이 없습니다."},
+    {"source": "loki", "success": true, "content": "에러 로그 2건 (최신순)\n- 2026-11-21T01:00:41Z ERROR PaymentApiApplication - Payment failed (version=1.7.3, deployedAt=2026-11-18T01:00:00Z) java.lang.OutOfMemoryError: Java heap space\n- 2026-11-21T01:00:39Z ERROR PaymentApiApplication - Payment failed (version=1.7.3, deployedAt=2026-11-18T01:00:00Z) java.lang.OutOfMemoryError: Java heap space"},
+    {"source": "prometheus", "success": true, "content": "기준: 장애 30분 전 → 현재\n- error-rate: 0.0000 → 0.3000\n- p95-latency-seconds: 0.0040 → 0.8100"}
+  ]
+}

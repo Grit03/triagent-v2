@@ -1,0 +1,10 @@
+{
+  "description": "모든 근거 조회가 실패했습니다. 근거 없이 조치를 제안하면 안 됩니다.",
+  "expectedAction": null,
+  "incident": {"id": 1, "alertName": "HighErrorRate", "service": "payment-api", "severity": "critical", "summary": "5xx error rate is above 5%", "startedAt": "2026-11-21T01:00:00Z"},
+  "evidences": [
+    {"source": "github", "success": false, "content": "서비스 'payment-api'에 연결된 저장소가 없습니다."},
+    {"source": "loki", "success": false, "content": "조회 실패: Connection refused (loki:3100)"},
+    {"source": "prometheus", "success": false, "content": "조회 실패: Connection refused (prometheus:9090)"}
+  ]
+}
