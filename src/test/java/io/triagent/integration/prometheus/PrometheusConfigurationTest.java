@@ -2,6 +2,7 @@ package io.triagent.integration.prometheus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +18,8 @@ class PrometheusConfigurationTest {
 	ApplicationContext context;
 
 	@Test
-	void bindsQueriesFromYamlInDeclaredOrder() {
+	@DisplayName("YAML의 쿼리를 선언한 순서대로 바인딩한다")
+	void bindQueries() {
 		assertThat(context.getBeansOfType(PrometheusMetricCollector.class)).hasSize(1);
 		PrometheusProperties properties = context.getBean(PrometheusProperties.class);
 		assertThat(properties.baseUrl()).hasToString("http://prometheus:9090");

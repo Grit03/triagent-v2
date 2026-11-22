@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +39,8 @@ class AuditLogTest {
 	AuditLogService auditLogService;
 
 	@Test
-	void incidentLifecycleAndActionRequestAreAudited() {
+	@DisplayName("장애 열림, 해소와 조치 요청을 감사 로그에 남긴다")
+	void incidentLifecycle() {
 		String fingerprint = "audit-" + System.nanoTime();
 		Long incidentId = incidentService.openIfAbsent(new OpenIncidentCommand(fingerprint, "HighErrorRate",
 				"payment-api", "critical", null, Instant.parse("2026-11-21T01:00:00Z"))).orElseThrow();
@@ -54,7 +56,8 @@ class AuditLogTest {
 	}
 
 	@Test
-	void decisionsDenialsAndExecutionResultAreAudited() throws InterruptedException {
+	@DisplayName("승인, 권한 거부, 실행 결과를 감사 로그에 남긴다")
+	void decisionAndExecution() throws InterruptedException {
 		Long incidentId = openIncident();
 		Long actionId = actionService.request(incidentId,
 				new CreateActionRequest(ActionType.RESTART, "U_ONCALL", null)).id();
@@ -74,7 +77,8 @@ class AuditLogTest {
 	}
 
 	@Test
-	void rejectionIsAudited() {
+	@DisplayName("거절을 감사 로그에 남긴다")
+	void rejection() {
 		Long incidentId = openIncident();
 		Long actionId = actionService.request(incidentId,
 				new CreateActionRequest(ActionType.REDEPLOY, "U_ONCALL", null)).id();
@@ -100,7 +104,8 @@ class AuditLogTest {
 	}
 
 	@Test
-	void auditLogsCannotBeDeletedThroughApi() {
+	@DisplayName("API로 감사 로그를 삭제할 수 없다")
+	void noDeleteApi() {
 		assertThat(mvc.delete().uri("/api/v1/audit-logs?incidentId=1")).hasStatus4xxClientError();
 	}
 }

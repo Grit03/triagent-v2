@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import io.triagent.incident.IncidentSnapshot;
@@ -27,7 +28,8 @@ class GitHubDeploymentCollectorTest {
 					Map.of("payment-api", "acme/payment-api")));
 
 	@Test
-	void summarizesRecentCommitsBeforeIncident() {
+	@DisplayName("장애 직전 커밋을 요약한다")
+	void collect() {
 		given(client.listCommits("acme/payment-api", STARTED_AT.minus(Duration.ofHours(6)), STARTED_AT))
 				.willReturn(List.of(new GitHubCommit("a1b2c3d4e5", "url", new GitHubCommit.Detail(
 						"fix: 결제 타임아웃 조정", new GitHubCommit.Author("kim", Instant.parse("2026-11-21T00:40:00Z"))))));
@@ -41,7 +43,8 @@ class GitHubDeploymentCollectorTest {
 	}
 
 	@Test
-	void reportsMissingRepositoryMappingWithoutCallingGitHub() {
+	@DisplayName("연결된 저장소가 없으면 GitHub을 호출하지 않고 알려 준다")
+	void noRepository() {
 		Evidence evidence = collector.collect(incident("order-api"));
 
 		assertThat(evidence).isEqualTo(Evidence.failure("github", "서비스 'order-api'에 연결된 저장소가 없습니다."));

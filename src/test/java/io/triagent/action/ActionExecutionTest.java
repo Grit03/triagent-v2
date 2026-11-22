@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,7 +45,8 @@ class ActionExecutionTest {
 	}
 
 	@Test
-	void approvedActionIsExecuted() throws InterruptedException {
+	@DisplayName("승인된 조치를 실행한다")
+	void executeApproved() throws InterruptedException {
 		actionService.approve(actionId, "U_LEAD");
 
 		ActionResponse action = awaitStatusChangeFrom(ActionStatus.APPROVED);
@@ -53,7 +55,8 @@ class ActionExecutionTest {
 	}
 
 	@Test
-	void executorFailureIsRecorded() throws InterruptedException {
+	@DisplayName("실행에 실패하면 실패로 기록한다")
+	void recordFailure() throws InterruptedException {
 		willThrow(new IllegalStateException("rollout timed out")).given(executor)
 				.execute(ActionType.ROLLBACK, "payment-api");
 
@@ -65,7 +68,8 @@ class ActionExecutionTest {
 	}
 
 	@Test
-	void rejectedActionIsNeverExecuted() {
+	@DisplayName("거절된 조치는 실행하지 않는다")
+	void skipRejected() {
 		actionService.reject(actionId, "U_LEAD");
 
 		verify(executor, after(500).never()).execute(ActionType.ROLLBACK, "payment-api");

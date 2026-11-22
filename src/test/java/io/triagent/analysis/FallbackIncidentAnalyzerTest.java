@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import io.triagent.incident.IncidentSnapshot;
@@ -29,7 +30,8 @@ class FallbackIncidentAnalyzerTest {
 	RuleBasedIncidentAnalyzer ruleBased = new RuleBasedIncidentAnalyzer();
 
 	@Test
-	void usesClaudeWhenAvailable() {
+	@DisplayName("Claude를 쓸 수 있으면 Claude 분석을 사용한다")
+	void useClaude() {
 		given(claude.analyze(any(), any())).willReturn("*원인 후보*: a1b2c3d 배포");
 
 		assertThat(new FallbackIncidentAnalyzer(Optional.of(claude), ruleBased).analyze(INCIDENT, EVIDENCES))
@@ -37,7 +39,8 @@ class FallbackIncidentAnalyzerTest {
 	}
 
 	@Test
-	void fallsBackToRulesWhenClaudeFails() {
+	@DisplayName("Claude가 실패하면 규칙 기반 요약으로 fallback한다")
+	void fallbackToRules() {
 		given(claude.analyze(any(), any())).willThrow(new IllegalStateException("overloaded"));
 
 		assertThat(new FallbackIncidentAnalyzer(Optional.of(claude), ruleBased).analyze(INCIDENT, EVIDENCES))
@@ -45,7 +48,8 @@ class FallbackIncidentAnalyzerTest {
 	}
 
 	@Test
-	void rulesPointToRecentCommitsLogsAndFailures() {
+	@DisplayName("규칙 기반 요약은 최근 커밋, 에러 로그, 조회 실패를 알려 준다")
+	void ruleHints() {
 		assertThat(new FallbackIncidentAnalyzer(Optional.empty(), ruleBased).analyze(INCIDENT, EVIDENCES))
 				.isEqualTo("(규칙 기반 요약) 장애 직전에 커밋이 있습니다. 최근 배포를 먼저 확인하세요. "
 						+ "에러 로그가 있습니다. 가장 최근 예외 메시지를 확인하세요. 조회에 실패한 근거가 있습니다: prometheus");

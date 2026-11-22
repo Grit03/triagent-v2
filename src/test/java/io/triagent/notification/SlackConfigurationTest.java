@@ -2,6 +2,7 @@ package io.triagent.notification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,7 +17,8 @@ class SlackConfigurationTest {
 	SlackProperties properties;
 
 	@Test
-	void signingSecretIsBoundFromEnvironment() {
+	@DisplayName("환경 변수의 Signing Secret을 바인딩한다")
+	void bindSigningSecret() {
 		assertThat(properties.signingSecret()).isEqualTo("test-signing-secret");
 	}
 }

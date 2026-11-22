@@ -9,6 +9,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import java.net.URI;
 import java.time.Instant;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -25,7 +26,8 @@ class SlackApprovalRequesterTest {
 	static final String WEBHOOK_URL = "https://hooks.slack.com/services/T000/B000/XXXX";
 
 	@Test
-	void postsMessageWithApproveAndRejectButtons() {
+	@DisplayName("승인, 거절 버튼이 달린 메시지를 보낸다")
+	void send() {
 		RestClient.Builder builder = RestClient.builder();
 		MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
 		SlackApprovalRequester requester = new SlackApprovalRequester(builder,

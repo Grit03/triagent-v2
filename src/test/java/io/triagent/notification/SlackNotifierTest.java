@@ -11,6 +11,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -28,7 +29,8 @@ class SlackNotifierTest {
 	static final String WEBHOOK_URL = "https://hooks.slack.com/services/T000/B000/XXXX";
 
 	@Test
-	void postsBlockKitMessageToWebhook() {
+	@DisplayName("Block Kit 메시지를 webhook으로 보낸다")
+	void send() {
 		RestClient.Builder builder = RestClient.builder();
 		MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
 		SlackNotifier notifier = new SlackNotifier(builder, new SlackProperties(URI.create(WEBHOOK_URL), null));
@@ -53,7 +55,8 @@ class SlackNotifierTest {
 	}
 
 	@Test
-	void truncatesLongSections() {
+	@DisplayName("Slack 길이 제한을 넘는 섹션은 자른다")
+	void truncateSection() {
 		String truncated = SlackNotifier.truncate("a".repeat(5000));
 
 		assertThat(truncated).hasSize(2900 + "\n...(생략)".length());

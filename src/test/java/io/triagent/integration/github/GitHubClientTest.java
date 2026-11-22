@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -28,7 +29,8 @@ class GitHubClientTest {
 			"test-token", Duration.ofHours(24), Map.of()));
 
 	@Test
-	void listsCommitsWithinWindow() {
+	@DisplayName("조회 기간 안의 커밋 목록을 가져온다")
+	void listCommits() {
 		server.expect(requestTo("https://api.github.com/repos/acme/payment-api/commits"
 				+ "?since=2026-11-20T01:00:00Z&until=2026-11-21T01:00:00Z&per_page=10"))
 				.andExpect(method(HttpMethod.GET))

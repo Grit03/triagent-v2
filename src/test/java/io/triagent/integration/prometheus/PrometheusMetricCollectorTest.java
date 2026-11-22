@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.OptionalDouble;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import io.triagent.incident.IncidentSnapshot;
@@ -29,7 +30,8 @@ class PrometheusMetricCollectorTest {
 	PrometheusMetricCollector collector = new PrometheusMetricCollector(client, properties());
 
 	@Test
-	void comparesBaselineAndCurrentValues() {
+	@DisplayName("장애 전 기준값과 현재 값을 비교한다")
+	void collect() {
 		given(client.query(eq("errors{service=\"payment-api\"}"), any()))
 				.willAnswer(inv -> inv.getArgument(1).equals(BASELINE_AT) ? OptionalDouble.of(0.002)
 						: OptionalDouble.of(0.0712));
@@ -46,7 +48,8 @@ class PrometheusMetricCollectorTest {
 	}
 
 	@Test
-	void showsMissingDataExplicitly() {
+	@DisplayName("데이터가 없으면 \"데이터 없음\"으로 표시한다")
+	void noData() {
 		given(client.query(any(), any())).willReturn(OptionalDouble.empty());
 
 		assertThat(collector.collect(new IncidentSnapshot(1L, "a", "payment-api", "critical", null, STARTED_AT)).content())

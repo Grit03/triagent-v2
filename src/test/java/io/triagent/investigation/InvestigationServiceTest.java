@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -41,7 +42,8 @@ class InvestigationServiceTest {
 			List.of(okCollector, brokenCollector), analyzer, List.of(failingNotifier, notifier));
 
 	@Test
-	void collectsEvidenceAndKeepsGoingWhenToolsFail() {
+	@DisplayName("일부 도구가 실패해도 나머지 근거를 모아 보고한다")
+	void collectorFailure() {
 		given(incidentService.findSnapshot(1L)).willReturn(Optional.of(incident()));
 		willThrow(new IllegalStateException("slack down")).given(failingNotifier).send(any());
 		given(analyzer.analyze(any(), any())).willReturn("원인 후보: 최근 배포");
@@ -59,7 +61,8 @@ class InvestigationServiceTest {
 	}
 
 	@Test
-	void skipsWhenIncidentIsMissing() {
+	@DisplayName("장애가 없으면 조사를 건너뛴다")
+	void incidentMissing() {
 		given(incidentService.findSnapshot(1L)).willReturn(Optional.empty());
 
 		service.investigate(1L);
