@@ -2,8 +2,9 @@ package io.triagent.audit;
 
 import java.time.Instant;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -27,9 +28,9 @@ import io.triagent.incident.IncidentService;
  * 이미 커밋된 업무를 감사 로그 실패 때문에 오류로 응답하지 않도록, 기록 실패는 에러 로그로 남깁니다.
  */
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class AuditEventListener {
-
-	private static final Logger log = LoggerFactory.getLogger(AuditEventListener.class);
 
 	/** Alertmanager 웹훅으로 일어난 일의 행위자 */
 	static final String ALERTMANAGER = "alertmanager";
@@ -42,13 +43,6 @@ public class AuditEventListener {
 	private final IncidentService incidentService;
 
 	private final ActionService actionService;
-
-	public AuditEventListener(AuditLogService auditLogService, IncidentService incidentService,
-			ActionService actionService) {
-		this.auditLogService = auditLogService;
-		this.incidentService = incidentService;
-		this.actionService = actionService;
-	}
 
 	@TransactionalEventListener
 	public void onIncidentOpened(IncidentOpenedEvent event) {

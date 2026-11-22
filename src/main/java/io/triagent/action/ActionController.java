@@ -2,6 +2,8 @@ package io.triagent.action;
 
 import java.net.URI;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +22,7 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class ActionController {
 
 	private final ActionService actionService;
@@ -29,10 +32,6 @@ public class ActionController {
 	 * Slack 사용자 ID가 아니므로 담당 팀원 누구나 승인할 수 있습니다(에이전트 요청과 같은 규칙).
 	 */
 	static final String API_ACTOR = "api";
-
-	public ActionController(ActionService actionService) {
-		this.actionService = actionService;
-	}
 
 	/** 새 리소스를 만들면 201 Created와 함께 조회 주소를 Location 헤더로 알려 줍니다. */
 	@PostMapping("/incidents/{incidentId}/actions")

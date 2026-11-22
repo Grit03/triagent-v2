@@ -3,8 +3,9 @@ package io.triagent.analysis;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -20,19 +21,13 @@ import io.triagent.investigation.IncidentAnalyzer;
  */
 @Primary
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class FallbackIncidentAnalyzer implements IncidentAnalyzer {
-
-	private static final Logger log = LoggerFactory.getLogger(FallbackIncidentAnalyzer.class);
 
 	private final Optional<ClaudeIncidentAnalyzer> claudeAnalyzer;
 
 	private final RuleBasedIncidentAnalyzer ruleBasedAnalyzer;
-
-	public FallbackIncidentAnalyzer(Optional<ClaudeIncidentAnalyzer> claudeAnalyzer,
-			RuleBasedIncidentAnalyzer ruleBasedAnalyzer) {
-		this.claudeAnalyzer = claudeAnalyzer;
-		this.ruleBasedAnalyzer = ruleBasedAnalyzer;
-	}
 
 	@Override
 	public String analyze(IncidentSnapshot incident, List<Evidence> evidences) {

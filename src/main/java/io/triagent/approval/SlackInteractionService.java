@@ -2,8 +2,8 @@ package io.triagent.approval;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -19,9 +19,8 @@ import io.triagent.approval.SlackInteractionPayload.Action;
  * 서명 검증을 통과한 버튼 클릭을 승인 또는 거절로 처리하고, 결과로 원래 Slack 메시지를 바꿉니다.
  */
 @Service
+@Slf4j
 public class SlackInteractionService {
-
-	private static final Logger log = LoggerFactory.getLogger(SlackInteractionService.class);
 
 	private final ActionService actionService;
 

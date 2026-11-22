@@ -1,5 +1,7 @@
 package io.triagent.investigation;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -7,13 +9,10 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import io.triagent.incident.IncidentOpenedEvent;
 
 @Component
+@RequiredArgsConstructor
 public class InvestigationEventListener {
 
 	private final InvestigationService investigationService;
-
-	public InvestigationEventListener(InvestigationService investigationService) {
-		this.investigationService = investigationService;
-	}
 
 	/**
 	 * 장애 저장 트랜잭션이 커밋된 뒤(AFTER_COMMIT, 기본값)에만 실행합니다.

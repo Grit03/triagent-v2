@@ -3,8 +3,8 @@ package io.triagent.analysis;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.models.beta.messages.BetaContentBlockParam;
@@ -24,6 +24,8 @@ import io.triagent.investigation.IncidentAnalyzer;
 /**
  * Claude에 장애 근거를 전달해 원인 후보와 권장 조치를 받아 옵니다.
  */
+@Slf4j
+@RequiredArgsConstructor
 public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 
 	/** 모델이 거절해도 서버가 다른 모델로 다시 시도하도록 하는 베타 기능 */
@@ -47,20 +49,11 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 	/** 에이전트가 요청한 조치의 요청자. 사람이 아니므로 F9 규칙상 누구든 담당 팀원이 승인할 수 있습니다. */
 	static final String AGENT_ACTOR = "triagent-agent";
 
-	private static final Logger log = LoggerFactory.getLogger(ClaudeIncidentAnalyzer.class);
-
 	private final AnthropicClient client;
 
 	private final AnthropicProperties properties;
 
 	private final ActionService actionService;
-
-	public ClaudeIncidentAnalyzer(AnthropicClient client, AnthropicProperties properties,
-			ActionService actionService) {
-		this.client = client;
-		this.properties = properties;
-		this.actionService = actionService;
-	}
 
 	@Override
 	public String analyze(IncidentSnapshot incident, List<Evidence> evidences) {

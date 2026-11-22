@@ -2,6 +2,10 @@ package io.triagent.action;
 
 import java.time.Instant;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,6 +23,8 @@ import jakarta.persistence.Version;
  */
 @Entity
 @Table(name = "remediation_action")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RemediationAction {
 
 	private static final int MAX_RESULT_LENGTH = 1000;
@@ -66,11 +72,8 @@ public class RemediationAction {
 	 * UPDATE 조건에 버전을 넣어 나중에 커밋하는 쪽이 실패하게 합니다. 그래야 승인된 조치가 두 번 실행되지 않습니다.
 	 */
 	@Version
+	@Getter(AccessLevel.NONE)
 	private long version;
-
-
-	protected RemediationAction() {
-	}
 
 	private RemediationAction(Long incidentId, String service, ActionType type, String reason, String requestedBy,
 			Instant requestedAt) {
@@ -126,53 +129,5 @@ public class RemediationAction {
 		this.status = outcome;
 		this.result = result.length() <= MAX_RESULT_LENGTH ? result : result.substring(0, MAX_RESULT_LENGTH);
 		this.finishedAt = finishedAt;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public Long getIncidentId() {
-		return incidentId;
-	}
-
-	public String getService() {
-		return service;
-	}
-
-	public ActionType getType() {
-		return type;
-	}
-
-	public String getReason() {
-		return reason;
-	}
-
-	public ActionStatus getStatus() {
-		return status;
-	}
-
-	public String getRequestedBy() {
-		return requestedBy;
-	}
-
-	public Instant getRequestedAt() {
-		return requestedAt;
-	}
-
-	public String getDecidedBy() {
-		return decidedBy;
-	}
-
-	public Instant getDecidedAt() {
-		return decidedAt;
-	}
-
-	public String getResult() {
-		return result;
-	}
-
-	public Instant getFinishedAt() {
-		return finishedAt;
 	}
 }

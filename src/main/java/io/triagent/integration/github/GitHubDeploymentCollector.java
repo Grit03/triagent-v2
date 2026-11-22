@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Component;
 
 import io.triagent.incident.IncidentSnapshot;
@@ -15,6 +17,7 @@ import io.triagent.investigation.Evidence;
  * 장애 원인의 상당수가 최근 변경에서 나오기 때문에, 당직자가 가장 먼저 확인하는 정보입니다.
  */
 @Component
+@RequiredArgsConstructor
 public class GitHubDeploymentCollector implements ContextCollector {
 
 	static final String SOURCE = "github";
@@ -22,11 +25,6 @@ public class GitHubDeploymentCollector implements ContextCollector {
 	private final GitHubClient gitHubClient;
 
 	private final GitHubProperties properties;
-
-	public GitHubDeploymentCollector(GitHubClient gitHubClient, GitHubProperties properties) {
-		this.gitHubClient = gitHubClient;
-		this.properties = properties;
-	}
 
 	@Override
 	public String source() {

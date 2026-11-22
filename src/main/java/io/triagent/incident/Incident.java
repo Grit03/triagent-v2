@@ -2,6 +2,10 @@ package io.triagent.incident;
 
 import java.time.Instant;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,6 +21,8 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "incident", indexes = @Index(name = "idx_incident_fingerprint_status", columnList = "fingerprint, status"))
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Incident {
 
 	@Id
@@ -32,6 +38,7 @@ public class Incident {
 	 * 이 컬럼의 unique 제약이 같은 알림으로 장애가 동시에 두 건 열리는 것을 막습니다(V3 마이그레이션).
 	 */
 	@Column(length = 64, unique = true)
+	@Getter(AccessLevel.NONE)
 	private String openFingerprint;
 
 	@Column(nullable = false)
@@ -54,10 +61,6 @@ public class Incident {
 	private Instant startedAt;
 
 	private Instant resolvedAt;
-
-	/** JPA 스펙상 기본 생성자가 필요합니다. 외부에서 쓰지 못하게 protected로 둡니다. */
-	protected Incident() {
-	}
 
 	private Incident(String fingerprint, String alertName, String service, String severity, String summary,
 			Instant startedAt) {
@@ -83,41 +86,5 @@ public class Incident {
 		this.status = IncidentStatus.RESOLVED;
 		this.openFingerprint = null;
 		this.resolvedAt = resolvedAt;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public String getFingerprint() {
-		return fingerprint;
-	}
-
-	public String getAlertName() {
-		return alertName;
-	}
-
-	public String getService() {
-		return service;
-	}
-
-	public String getSeverity() {
-		return severity;
-	}
-
-	public String getSummary() {
-		return summary;
-	}
-
-	public IncidentStatus getStatus() {
-		return status;
-	}
-
-	public Instant getStartedAt() {
-		return startedAt;
-	}
-
-	public Instant getResolvedAt() {
-		return resolvedAt;
 	}
 }

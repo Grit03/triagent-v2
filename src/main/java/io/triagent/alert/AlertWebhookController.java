@@ -1,5 +1,7 @@
 package io.triagent.alert;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,13 +16,10 @@ import jakarta.validation.Valid;
  */
 @RestController
 @RequestMapping("/api/v1/alerts")
+@RequiredArgsConstructor
 public class AlertWebhookController {
 
 	private final AlertService alertService;
-
-	public AlertWebhookController(AlertService alertService) {
-		this.alertService = alertService;
-	}
 
 	/**
 	 * 알림을 접수만 하고 바로 응답합니다. 조사는 이후 단계에서 비동기로 진행하므로 202 Accepted를 돌려줍니다.

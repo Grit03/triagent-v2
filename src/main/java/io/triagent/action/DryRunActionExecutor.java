@@ -1,7 +1,7 @@
 package io.triagent.action;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,9 +10,8 @@ import org.springframework.stereotype.Component;
  * 결과 메시지에 "드라이런"을 명시해, 실제로 실행된 것처럼 보이지 않게 합니다.
  */
 @Component
+@Slf4j
 public class DryRunActionExecutor implements ActionExecutor {
-
-	private static final Logger log = LoggerFactory.getLogger(DryRunActionExecutor.class);
 
 	@Override
 	public String execute(ActionType type, String service) {
