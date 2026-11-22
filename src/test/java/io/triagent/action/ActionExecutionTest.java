@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,7 +55,8 @@ class ActionExecutionTest {
 	}
 
 	@Test
-	void approvedActionIsExecuted() throws InterruptedException {
+	@DisplayName("승인된 조치를 실행한다")
+	void executeApproved() throws InterruptedException {
 		actionService.approve(actionId, "U_LEAD");
 
 		ActionResponse action = awaitStatusChangeFrom(ActionStatus.APPROVED);
@@ -63,7 +65,8 @@ class ActionExecutionTest {
 	}
 
 	@Test
-	void executorFailureIsRecorded() throws InterruptedException {
+	@DisplayName("실행에 실패하면 실패로 기록한다")
+	void recordFailure() throws InterruptedException {
 		willThrow(new IllegalStateException("rollout timed out")).given(executor)
 				.execute(ActionType.ROLLBACK, "payment-api");
 
@@ -75,7 +78,8 @@ class ActionExecutionTest {
 	}
 
 	@Test
-	void rejectedActionIsNeverExecuted() {
+	@DisplayName("거절된 조치는 실행하지 않는다")
+	void skipRejected() {
 		actionService.reject(actionId, "U_LEAD");
 
 		verify(executor, after(500).never()).execute(ActionType.ROLLBACK, "payment-api");
@@ -87,7 +91,8 @@ class ActionExecutionTest {
 	 * 승인 쪽이 PENDING을 읽은 뒤, 다른 스레드의 거절이 먼저 커밋되면 승인 쪽 커밋은 실패하고 실행되지 않아야 합니다.
 	 */
 	@Test
-	void concurrentDecisionThatCommitsLaterFailsAndIsNeverExecuted() {
+	@DisplayName("동시에 결정하면 나중에 커밋한 쪽은 실패하고 실행되지 않는다")
+	void concurrentDecision() {
 		assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status -> {
 			RemediationAction action = actionRepository.findById(actionId).orElseThrow();
 			CompletableFuture.runAsync(() -> actionService.reject(actionId, "U_ONCALL")).join();

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 
 import org.flywaydb.core.Flyway;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,7 +41,8 @@ class PostgresMigrationTest {
 	AuditLogService auditLogService;
 
 	@Test
-	void migrationsApplyAndEntitiesMatchSchema() {
+	@DisplayName("PostgreSQL에 마이그레이션이 적용되고 엔티티와 스키마가 일치한다")
+	void migrate() {
 		assertThat(flyway.info().applied()).extracting(migration -> migration.getVersion().getVersion())
 				.containsExactly("1", "2");
 

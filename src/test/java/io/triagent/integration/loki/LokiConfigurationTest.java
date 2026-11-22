@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +20,15 @@ class LokiConfigurationTest {
 
 	@Nested
 	@SpringBootTest(properties = "LOKI_URL=http://loki:3100")
+	@DisplayName("Loki 주소가 있으면")
 	class WhenLokiUrlIsSet {
 
 		@Autowired
 		ApplicationContext context;
 
 		@Test
-		void registersCollectorWithPropertiesFromYaml() {
+		@DisplayName("YAML 설정으로 collector를 등록한다")
+		void registerCollector() {
 			assertThat(context.getBeansOfType(LokiLogCollector.class)).hasSize(1);
 			LokiProperties properties = context.getBean(LokiProperties.class);
 			assertThat(properties.baseUrl()).hasToString("http://loki:3100");
@@ -36,13 +39,15 @@ class LokiConfigurationTest {
 
 	@Nested
 	@SpringBootTest
+	@DisplayName("Loki 주소가 없으면")
 	class WhenLokiUrlIsMissing {
 
 		@Autowired
 		ApplicationContext context;
 
 		@Test
-		void doesNotRegisterCollector() {
+		@DisplayName("collector를 등록하지 않는다")
+		void skipCollector() {
 			assertThat(context.getBeansOfType(LokiLogCollector.class)).isEmpty();
 		}
 	}

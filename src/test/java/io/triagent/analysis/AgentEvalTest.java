@@ -16,6 +16,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.Resource;
@@ -51,7 +52,8 @@ class AgentEvalTest {
 	}
 
 	@Test
-	void measuresHowOftenClaudeProposesTheExpectedAction() throws IOException {
+	@DisplayName("시나리오별로 Claude가 기대한 조치를 제안하는 비율을 측정한다")
+	void measureAgent() throws IOException {
 		String apiKey = System.getenv("ANTHROPIC_API_KEY");
 		assumeThat(apiKey).as("ANTHROPIC_API_KEY가 없으면 평가를 건너뜁니다").isNotBlank();
 		String model = System.getProperty("eval.model", "claude-haiku-5-5");

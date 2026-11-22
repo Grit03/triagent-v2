@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -70,7 +71,8 @@ class SlackInteractionControllerTest {
 	}
 
 	@Test
-	void signedApproveClickApprovesAction() {
+	@DisplayName("서명이 올바른 승인 클릭이면 조치를 승인한다")
+	void approve() {
 		assertThat(click("approve_action", true)).hasStatusOk();
 
 		assertThat(actionService.getAction(actionId).decidedBy()).isEqualTo("U_LEAD");
@@ -78,7 +80,8 @@ class SlackInteractionControllerTest {
 	}
 
 	@Test
-	void secondClickOnDecidedActionIsReportedNotApplied() {
+	@DisplayName("이미 결정된 조치를 다시 누르면 반영하지 않고 안내한다")
+	void alreadyDecided() {
 		click("reject_action", true);
 
 		assertThat(click("approve_action", true)).hasStatusOk();
@@ -88,7 +91,8 @@ class SlackInteractionControllerTest {
 	}
 
 	@Test
-	void clickThatLosesToConcurrentDecisionIsReported() {
+	@DisplayName("동시 결정에서 밀린 클릭에는 다른 사람이 먼저 처리했다고 안내한다")
+	void concurrentClick() {
 		willThrow(new ObjectOptimisticLockingFailureException(RemediationAction.class, actionId)).given(actionService)
 				.approve(actionId, "U_LEAD");
 
@@ -98,7 +102,8 @@ class SlackInteractionControllerTest {
 	}
 
 	@Test
-	void clickFromUserOutsideOwningTeamIsDenied() {
+	@DisplayName("담당 팀원이 아니면 거부한다")
+	void notTeamMember() {
 		assertThat(click("approve_action", true, "U_STRANGER")).hasStatusOk();
 
 		assertThat(actionService.getAction(actionId).status()).isEqualTo(ActionStatus.PENDING);
@@ -106,7 +111,8 @@ class SlackInteractionControllerTest {
 	}
 
 	@Test
-	void unsignedClickIsRejected() {
+	@DisplayName("서명이 틀린 요청은 401로 거부한다")
+	void invalidSignature() {
 		assertThat(click("approve_action", false)).hasStatus(HttpStatus.UNAUTHORIZED);
 
 		assertThat(actionService.getAction(actionId).status()).isEqualTo(ActionStatus.PENDING);

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 
 import java.nio.charset.StandardCharsets;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,7 +34,8 @@ class InvestigationFlowTest {
 	LoggingNotifier loggingNotifier;
 
 	@Test
-	void openedIncidentIsInvestigatedAsynchronouslyAndReported() throws Exception {
+	@DisplayName("장애가 열리면 비동기로 조사하고 보고한다")
+	void investigate() throws Exception {
 		String body = new ClassPathResource("alertmanager/firing.json").getContentAsString(StandardCharsets.UTF_8)
 				.replace("c8a1f2d3e4b5a6f7", "flow-test-fingerprint");
 

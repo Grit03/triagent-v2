@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -30,7 +31,8 @@ class LokiClientTest {
 			new LokiProperties(URI.create("http://loki:3100"), "unused", Duration.ofMinutes(15), 20));
 
 	@Test
-	void mergesStreamsAndSortsNewestFirst() {
+	@DisplayName("여러 stream의 로그를 합쳐 최신순으로 정렬한다")
+	void queryRange() {
 		server.expect(requestTo(startsWith("http://loki:3100/loki/api/v1/query_range?")))
 				.andExpect(method(HttpMethod.GET))
 				// LogQL의 특수문자({, ", | 등)가 퍼센트 인코딩되어 전송되는지 확인합니다.

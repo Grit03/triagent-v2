@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import io.triagent.incident.IncidentSnapshot;
@@ -27,7 +28,8 @@ class LokiLogCollectorTest {
 			"{service=\"%s\"} |= \"ERROR\"", Duration.ofMinutes(15), 20));
 
 	@Test
-	void formatsErrorLogsAsEvidence() {
+	@DisplayName("에러 로그를 근거로 정리한다")
+	void collect() {
 		given(client.queryRange(eq("{service=\"payment-api\"} |= \"ERROR\""), eq(STARTED_AT.minusSeconds(900)),
 				any(), eq(20)))
 				.willReturn(List.of(new LogLine(STARTED_AT, "ERROR Connection pool exhausted\n\tat Hikari...")));
@@ -40,7 +42,8 @@ class LokiLogCollectorTest {
 	}
 
 	@Test
-	void reportsWhenThereAreNoErrorLogs() {
+	@DisplayName("에러 로그가 없으면 없다고 알려 준다")
+	void noErrorLogs() {
 		given(client.queryRange(any(), any(), any(), eq(20))).willReturn(List.of());
 
 		assertThat(collector.collect(incident("payment-api")).content()).startsWith("에러 로그가 없습니다.");

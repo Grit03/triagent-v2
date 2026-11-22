@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class RemediationActionTest {
@@ -12,12 +13,14 @@ class RemediationActionTest {
 	static final Instant NOW = Instant.parse("2026-11-21T02:00:00Z");
 
 	@Test
-	void newActionWaitsForApproval() {
+	@DisplayName("새 조치는 승인 대기 상태다")
+	void request() {
 		assertThat(pendingAction().getStatus()).isEqualTo(ActionStatus.PENDING);
 	}
 
 	@Test
-	void approveRecordsWhoDecided() {
+	@DisplayName("승인하면 누가 언제 결정했는지 기록한다")
+	void approve() {
 		RemediationAction action = pendingAction();
 
 		action.approve("U_LEAD", NOW);
@@ -28,7 +31,8 @@ class RemediationActionTest {
 	}
 
 	@Test
-	void decisionCanBeMadeOnlyOnce() {
+	@DisplayName("승인, 거절은 한 번만 할 수 있다")
+	void decideOnce() {
 		RemediationAction action = pendingAction();
 		action.reject("U_LEAD", NOW);
 
@@ -39,7 +43,8 @@ class RemediationActionTest {
 	}
 
 	@Test
-	void resultCanBeRecordedOnlyAfterApproval() {
+	@DisplayName("실행 결과는 승인된 조치에만 기록할 수 있다")
+	void finishAfterApproval() {
 		RemediationAction action = pendingAction();
 
 		assertThatThrownBy(() -> action.markExecuted("done", NOW)).isInstanceOf(IllegalStateException.class);
@@ -51,7 +56,8 @@ class RemediationActionTest {
 	}
 
 	@Test
-	void requesterCannotApproveOwnAction() {
+	@DisplayName("요청자는 자기 요청을 승인할 수 없다")
+	void selfApproval() {
 		RemediationAction action = pendingAction();
 
 		assertThatThrownBy(() -> action.approve("U_ONCALL", NOW)).isInstanceOf(DecisionNotAllowedException.class);

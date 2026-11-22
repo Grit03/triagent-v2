@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.OptionalDouble;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -29,7 +30,8 @@ class PrometheusClientTest {
 			new PrometheusProperties(URI.create("http://prometheus:9090"), Duration.ofMinutes(30), Map.of()));
 
 	@Test
-	void parsesFirstSampleValue() {
+	@DisplayName("첫 번째 sample 값을 파싱한다")
+	void query() {
 		server.expect(requestTo(startsWith("http://prometheus:9090/api/v1/query?")))
 				.andExpect(queryParam("query", "up%7Bservice%3D%22payment-api%22%7D"))
 				.andExpect(queryParam("time", "2026-11-21T01:00:00Z"))
@@ -46,7 +48,8 @@ class PrometheusClientTest {
 	}
 
 	@Test
-	void returnsEmptyWhenNoSeriesMatch() {
+	@DisplayName("일치하는 series가 없으면 빈 값을 반환한다")
+	void noSeries() {
 		server.expect(requestTo(startsWith("http://prometheus:9090/api/v1/query?")))
 				.andRespond(withSuccess("""
 						{ "status": "success", "data": { "resultType": "vector", "result": [] } }
