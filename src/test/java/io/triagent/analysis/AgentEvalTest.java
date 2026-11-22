@@ -15,6 +15,7 @@ import io.triagent.action.CreateActionRequest;
 import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -32,7 +33,8 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * 에이전트 회귀 평가. 장애 시나리오(src/test/resources/eval/scenarios)를 실제 Claude에 넣고, 기대한 조치를 제안하는 비율을 잽니다.
+ * 에이전트 회귀 평가. 장애 시나리오(src/test/resources/eval/scenarios)를 실제 Claude에 넣고, 기대한 조치를 제안하는 비율을 잽니다. 도구를
+ * 호출하지 않고 텍스트로만 요청했다고 쓴 경우도 실패로 셉니다.
  *
  * <p>실제 API를 호출해 비용이 들기 때문에 `./gradlew test`와 CI에서는 실행하지 않고 `./gradlew eval`로만 실행합니다. 조치 요청은 DB 대신
  * Mockito 목에 기록하므로 아무것도 저장되거나 실행되지 않습니다.
@@ -123,15 +125,31 @@ class AgentEvalTest {
                                         null);
                             });
             try {
-                new ClaudeIncidentAnalyzer(client, properties, actionService)
-                        .analyze(scenario.incident(), scenario.evidences());
-                outcomes.add(proposed.isEmpty() ? "없음" : proposed.toString());
-                passed += proposed.equals(expected) ? 1 : 0;
+                String analysis =
+                        new ClaudeIncidentAnalyzer(client, properties, actionService)
+                                .analyze(scenario.incident(), scenario.evidences());
+                saveAnalysis(name, run, analysis);
+                // 도구를 호출하지 않았는데 텍스트로 요청했다고 쓰면, 기대 조치와 맞더라도 실패입니다.
+                boolean falseClaim = proposed.isEmpty() && RequestClaims.claimsRequest(analysis);
+                String outcome = proposed.isEmpty() ? "없음" : proposed.toString();
+                outcomes.add(falseClaim ? outcome + " (텍스트는 요청했다고 씀)" : outcome);
+                passed += proposed.equals(expected) && !falseClaim ? 1 : 0;
             } catch (RuntimeException ex) {
                 outcomes.add("오류(" + ex.getMessage() + ")");
             }
         }
         return new Result(name, scenario, outcomes, passed);
+    }
+
+    /** 실패 원인을 나중에 확인할 수 있도록 분석 텍스트를 남깁니다. */
+    private static void saveAnalysis(String name, int run, String analysis) {
+        try {
+            Path path = Path.of("build/reports/eval/analyses/%s-%d.md".formatted(name, run + 1));
+            Files.createDirectories(path.getParent());
+            Files.writeString(path, analysis);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
     }
 
     private static String report(String model, String effort, int repeat, List<Result> results) {
@@ -154,6 +172,9 @@ class AgentEvalTest {
         int total = results.size() * repeat;
         report.append(
                 "\n전체 통과율: %d/%d (%.0f%%)\n".formatted(passed, total, 100.0 * passed / total));
+        report.append(
+                "\n\"(텍스트는 요청했다고 씀)\"은 도구를 호출하지 않았는데 분석에 요청했다고 쓴 경우로, 실패로 셉니다."
+                        + " 분석 텍스트는 `build/reports/eval/analyses`에 있습니다.\n");
         return report.toString();
     }
 }
