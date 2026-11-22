@@ -2,6 +2,7 @@ package io.triagent.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.time.Instant;
 
@@ -12,10 +13,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import io.triagent.action.ActionDecisionDeniedEvent;
 import io.triagent.action.ActionService;
 import io.triagent.action.ActionType;
 import io.triagent.action.CreateActionRequest;
 import io.triagent.action.DecisionNotAllowedException;
+import io.triagent.incident.IncidentOpenedEvent;
+import io.triagent.incident.IncidentResolvedEvent;
 import io.triagent.incident.IncidentService;
 import io.triagent.incident.OpenIncidentCommand;
 
@@ -37,6 +41,9 @@ class AuditLogTest {
 
 	@Autowired
 	AuditLogService auditLogService;
+
+	@Autowired
+	AuditEventListener auditEventListener;
 
 	@Test
 	@DisplayName("장애 열림, 해소와 조치 요청을 감사 로그에 남긴다")
@@ -88,6 +95,30 @@ class AuditLogTest {
 		assertThat(auditLogService.findByIncident(incidentId)).last()
 				.satisfies(log -> assertThat(log.type()).isEqualTo(AuditEventType.ACTION_REJECTED))
 				.satisfies(log -> assertThat(log.actor()).isEqualTo("U_ONCALL"));
+	}
+
+	@Test
+	@DisplayName("장애 열림, 해소, 권한 거부는 리스너 실행 시각이 아니라 이벤트에 담긴 업무 시각으로 남긴다")
+	void usesEventTimestamp() {
+		Long incidentId = openIncident();
+		Long actionId = actionService.request(incidentId,
+				new CreateActionRequest(ActionType.RESTART, null), "U_ONCALL").id();
+		Instant openedAt = Instant.parse("2000-01-01T00:00:00Z");
+		Instant deniedAt = Instant.parse("2000-01-01T00:10:00Z");
+		Instant resolvedAt = Instant.parse("2000-01-01T00:20:00Z");
+
+		// 리스너를 직접 불러, 커밋 이후 실행되는 리스너가 스스로 시각을 잡지 않는지 확인합니다.
+		// 실제 흐름에서 남은 로그와 섞이지 않도록 먼 과거 시각을 씁니다.
+		auditEventListener.onIncidentOpened(new IncidentOpenedEvent(incidentId, openedAt));
+		auditEventListener.onDecisionDenied(new ActionDecisionDeniedEvent(actionId, "U_STRANGER", "denied", deniedAt));
+		auditEventListener.onIncidentResolved(new IncidentResolvedEvent(incidentId, resolvedAt));
+
+		assertThat(auditLogService.findByIncident(incidentId))
+				.filteredOn(log -> log.occurredAt().isBefore(Instant.parse("2001-01-01T00:00:00Z")))
+				.extracting(AuditLogResponse::type, AuditLogResponse::occurredAt)
+				.containsExactly(tuple(AuditEventType.INCIDENT_OPENED, openedAt),
+						tuple(AuditEventType.ACTION_DENIED, deniedAt),
+						tuple(AuditEventType.INCIDENT_RESOLVED, resolvedAt));
 	}
 
 	private Long openIncident() {
