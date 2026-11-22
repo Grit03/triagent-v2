@@ -45,7 +45,7 @@ class SlackNotifierTest {
                 .andExpect(
                         jsonPath("$.blocks[2].text.text")
                                 .value(containsString("`ROLLBACK` 조치 ID 7, 승인 대기")))
-                .andExpect(jsonPath("$.blocks[3].text.text").value("*분석*\n원인 후보: 최근 배포"))
+                .andExpect(jsonPath("$.blocks[3].text.text").value("*분석*\n원인 후보: *최근 배포*"))
                 .andExpect(
                         jsonPath("$.blocks[4].text.text")
                                 .value(containsString(":warning: `loki` 조회 실패")))
@@ -63,7 +63,7 @@ class SlackNotifierTest {
                         List.of(
                                 Evidence.success("github", "최근 커밋 3건"),
                                 Evidence.failure("loki", "조회 실패: timeout")),
-                        "원인 후보: 최근 배포",
+                        "원인 후보: **최근 배포**",
                         List.of(action(7L, ActionType.ROLLBACK, ActionStatus.PENDING))));
 
         server.verify();
@@ -122,5 +122,30 @@ class SlackNotifierTest {
         String truncated = SlackNotifier.truncate("a".repeat(5000));
 
         assertThat(truncated).hasSize(2900 + "\n...(생략)".length());
+    }
+
+    @Test
+    @DisplayName("일반 마크다운의 **굵게**를 Slack의 *굵게*로 바꾼다")
+    void markdownBold() {
+        String analysis =
+                """
+                *원인 후보*
+                1. **v1.8.0 배포에 포함된 NPE (가장 유력)**: 로그 20건
+                2. **입력 데이터의 null 값 (낮음)**: 근거 부족""";
+
+        assertThat(SlackNotifier.toSlackBold(analysis))
+                .isEqualTo(
+                        """
+                        *원인 후보*
+                        1. *v1.8.0 배포에 포함된 NPE (가장 유력)*: 로그 20건
+                        2. *입력 데이터의 null 값 (낮음)*: 근거 부족""");
+    }
+
+    @Test
+    @DisplayName("짝이 없거나 줄을 넘는 별표는 그대로 둔다")
+    void unmatchedAsterisks() {
+        String text = "**짝이 없음\n다음 줄** 그리고 2 ** 3";
+
+        assertThat(SlackNotifier.toSlackBold(text)).isEqualTo(text);
     }
 }
