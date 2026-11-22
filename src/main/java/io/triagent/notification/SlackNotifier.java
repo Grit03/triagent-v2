@@ -14,12 +14,6 @@ import io.triagent.investigation.InvestigationReport;
 import io.triagent.investigation.Notifier;
 import io.triagent.notification.SlackMessage.Block;
 
-/**
- * Slack Incoming Webhook으로 조사 결과를 보냅니다.
- * <p>
- * https://docs.slack.dev/messaging/sending-messages-using-incoming-webhooks
- * webhook-url이 설정된 경우에만 빈으로 등록됩니다.
- */
 @Component
 @ConditionalOnExpression("'${triagent.notification.slack.webhook-url:}' != ''")
 public class SlackNotifier implements Notifier {

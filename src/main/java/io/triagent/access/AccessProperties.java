@@ -5,11 +5,6 @@ import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * {@code triagent.access.*} 설정. 팀마다 구성원과 담당 서비스를 적습니다.
- *
- * @param teams 팀 이름 → 팀 정보
- */
 @ConfigurationProperties("triagent.access")
 public record AccessProperties(Map<String, Team> teams) {
 
@@ -17,10 +12,6 @@ public record AccessProperties(Map<String, Team> teams) {
 		teams = teams != null ? Map.copyOf(teams) : Map.of();
 	}
 
-	/**
-	 * @param members 구성원의 Slack 사용자 ID
-	 * @param services 이 팀이 담당하는 서비스(알림의 service 라벨 값)
-	 */
 	public record Team(Set<String> members, Set<String> services) {
 
 		public Team {

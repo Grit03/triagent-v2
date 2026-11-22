@@ -12,10 +12,6 @@ import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.ContextCollector;
 import io.triagent.investigation.Evidence;
 
-/**
- * 장애 직전에 들어간 커밋을 배포 후보로 보고 근거로 수집합니다.
- * 장애 원인의 상당수가 최근 변경에서 나오기 때문에, 당직자가 가장 먼저 확인하는 정보입니다.
- */
 @Component
 @RequiredArgsConstructor
 public class GitHubDeploymentCollector implements ContextCollector {

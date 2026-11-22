@@ -8,13 +8,6 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
-/**
- * {@code triagent.prometheus.*} 설정.
- *
- * @param baseUrl Prometheus 주소
- * @param lookback 기준값을 볼 시점. 장애 시작 시각에서 이만큼 이전입니다
- * @param queries 지표 이름 → PromQL 템플릿({@code %1$s}에 서비스 이름이 들어갑니다)
- */
 @ConfigurationProperties("triagent.prometheus")
 public record PrometheusProperties(
 		URI baseUrl,

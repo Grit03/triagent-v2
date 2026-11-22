@@ -33,13 +33,8 @@ public class IncidentService {
 	}
 
 	/**
-	 * 같은 fingerprint로 열린 장애가 없을 때만 새 장애를 엽니다.
-	 * <p>
-	 * 같은 알림이 동시에 두 번 들어오면 두 요청 모두 "열린 장애 없음"을 보고 저장하려 합니다. 이때는
-	 * {@code open_fingerprint} unique 제약이 나중 INSERT를 거부합니다. 거부된 트랜잭션은 롤백 전용이 되어
-	 * 안에서 예외를 잡아도 커밋할 수 없으므로, 트랜잭션을 이 메서드 안에서 직접 열고 바깥에서 예외를 처리합니다.
-	 *
-	 * @return 새로 연 장애의 ID. 이미 열린 장애가 있으면 비어 있습니다.
+	 * 같은 알림이 동시에 들어오면 {@code open_fingerprint} unique 제약이 나중 INSERT를 거부합니다.
+	 * 거부된 트랜잭션은 롤백 전용이 되어 안에서 예외를 잡아도 커밋할 수 없으므로, 트랜잭션을 직접 열고 바깥에서 예외를 처리합니다.
 	 */
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	public Optional<Long> openIfAbsent(OpenIncidentCommand command) {
@@ -65,22 +60,15 @@ public class IncidentService {
 				command.severity(), command.summary(), command.startedAt());
 		Long incidentId = incidentRepository.save(incident).getId();
 		log.info("Incident opened: id={}, alert={}, service={}", incidentId, command.alertName(), command.service());
-		// 조사 시작은 이벤트로 알리기만 합니다. IncidentService는 누가 조사하는지 알 필요가 없습니다.
 		eventPublisher.publishEvent(new IncidentOpenedEvent(incidentId, Instant.now()));
 		return Optional.of(incidentId);
 	}
 
-	/**
-	 * 같은 fingerprint로 열린 장애를 모두 해소합니다. unique 제약을 추가하기 전에 중복으로 열린 장애가 남아 있어도
-	 * 여기서 함께 닫힙니다.
-	 *
-	 * @return 해소한 장애의 ID. 열린 장애가 없으면 비어 있습니다.
-	 */
+	/** unique 제약을 추가하기 전에 중복으로 열린 장애가 남아 있을 수 있어, 하나만이 아니라 모두 해소합니다. */
 	@Transactional
 	public List<Long> resolveIfOpen(String fingerprint, Instant resolvedAt) {
 		return incidentRepository.findAllByFingerprintAndStatus(fingerprint, IncidentStatus.OPEN).stream()
 				.map(incident -> {
-					// 변경 감지(dirty checking)로 커밋 시점에 UPDATE되므로 save()를 다시 부르지 않습니다.
 					incident.resolve(resolvedAt);
 					log.info("Incident resolved: id={}", incident.getId());
 					eventPublisher.publishEvent(new IncidentResolvedEvent(incident.getId(), Instant.now()));
@@ -95,7 +83,6 @@ public class IncidentService {
 				.orElseThrow(() -> new IncidentNotFoundException(id));
 	}
 
-	/** 다른 패키지에서 장애 정보가 필요할 때 엔티티 대신 읽기 전용 복사본을 돌려줍니다. */
 	public Optional<IncidentSnapshot> findSnapshot(Long id) {
 		return incidentRepository.findById(id).map(IncidentSnapshot::from);
 	}

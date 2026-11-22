@@ -19,21 +19,14 @@ import io.triagent.incident.IncidentOpenedEvent;
 import io.triagent.incident.IncidentResolvedEvent;
 import io.triagent.incident.IncidentService;
 
-/**
- * 다른 패키지가 발행한 이벤트를 받아 감사 로그로 남깁니다. 업무 코드는 감사 로그의 존재를 모릅니다.
- * <p>
- * 커밋된 일만 기록하도록 AFTER_COMMIT(기본값)에서 실행합니다. 같은 스레드에서 동기로 실행되므로 기록이 끝난 뒤 요청이 끝납니다.
- * 이미 커밋된 업무를 감사 로그 실패 때문에 오류로 응답하지 않도록, 기록 실패는 에러 로그로 남깁니다.
- */
+/** 이미 커밋된 업무를 감사 로그 실패 때문에 오류로 응답하지 않도록, 기록 실패는 예외 대신 에러 로그로 남깁니다. */
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class AuditEventListener {
 
-	/** Alertmanager 웹훅으로 일어난 일의 행위자 */
 	static final String ALERTMANAGER = "alertmanager";
 
-	/** 승인된 조치를 실행한 시스템 */
 	static final String EXECUTOR = "triagent";
 
 	private final AuditLogService auditLogService;

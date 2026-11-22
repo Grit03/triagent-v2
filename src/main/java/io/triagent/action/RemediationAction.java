@@ -16,11 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-/**
- * 장애를 해결하기 위해 요청된 조치 한 건(롤백, 재배포, 재시작).
- * <p>
- * 장애는 {@code @ManyToOne} 연관관계 대신 ID로만 참조합니다. incident 패키지의 엔티티에 직접 의존하지 않기 위해서입니다.
- */
 @Entity
 @Table(name = "remediation_action")
 @Getter
@@ -36,7 +31,6 @@ public class RemediationAction {
 	@Column(nullable = false)
 	private Long incidentId;
 
-	/** 조치 대상 서비스. 요청 시점의 장애 서비스를 복사해 둡니다. */
 	@Column(nullable = false)
 	private String service;
 
@@ -61,15 +55,14 @@ public class RemediationAction {
 
 	private Instant decidedAt;
 
-	/** 실행 결과 메시지(성공 시 실행 내용, 실패 시 실패 사유) */
 	@Column(length = MAX_RESULT_LENGTH)
 	private String result;
 
 	private Instant finishedAt;
 
 	/**
-	 * 낙관적 락(optimistic lock)용 버전. 두 사람이 동시에 승인, 거절하면 둘 다 PENDING을 읽고 결정할 수 있는데,
-	 * UPDATE 조건에 버전을 넣어 나중에 커밋하는 쪽이 실패하게 합니다. 그래야 승인된 조치가 두 번 실행되지 않습니다.
+	 * 두 사람이 동시에 승인, 거절하면 둘 다 PENDING을 읽고 결정할 수 있습니다.
+	 * UPDATE 조건에 버전을 넣어 나중에 커밋하는 쪽이 실패하게 해서, 승인된 조치가 두 번 실행되지 않게 합니다.
 	 */
 	@Version
 	@Getter(AccessLevel.NONE)
@@ -91,7 +84,6 @@ public class RemediationAction {
 		return new RemediationAction(incidentId, service, type, reason, requestedBy, requestedAt);
 	}
 
-	/** 요청한 사람은 자기 요청을 승인할 수 없습니다(두 사람 확인 원칙). 거절, 즉 요청 철회는 할 수 있습니다. */
 	public void approve(String approver, Instant decidedAt) {
 		if (approver.equals(requestedBy)) {
 			throw new DecisionNotAllowedException("Requester %s cannot approve their own action".formatted(approver));
@@ -111,7 +103,6 @@ public class RemediationAction {
 		finish(ActionStatus.FAILED, reason, finishedAt);
 	}
 
-	/** 승인과 거절은 승인 대기 상태에서 한 번만 할 수 있습니다. */
 	private void decide(ActionStatus decision, String decider, Instant decidedAt) {
 		if (status != ActionStatus.PENDING) {
 			throw new ActionAlreadyDecidedException(id, status);
@@ -121,7 +112,6 @@ public class RemediationAction {
 		this.decidedAt = decidedAt;
 	}
 
-	/** 실행 결과는 승인된 조치에만 기록할 수 있습니다. 승인 없이 실행된 기록이 남지 않게 합니다. */
 	private void finish(ActionStatus outcome, String result, Instant finishedAt) {
 		if (status != ActionStatus.APPROVED) {
 			throw new IllegalStateException("Action %d is %s, not APPROVED".formatted(id, status));

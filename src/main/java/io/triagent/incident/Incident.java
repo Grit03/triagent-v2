@@ -16,9 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
-/**
- * 장애 한 건. Alertmanager 알림 하나(fingerprint 기준)가 장애 하나가 됩니다.
- */
 @Entity
 @Table(name = "incident", indexes = @Index(name = "idx_incident_fingerprint_status", columnList = "fingerprint, status"))
 @Getter
@@ -29,7 +26,6 @@ public class Incident {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	/** Alertmanager가 라벨 조합으로 계산한 알림 식별자. 같은 알림의 재전송을 구분하는 데 씁니다. */
 	@Column(nullable = false, length = 64)
 	private String fingerprint;
 

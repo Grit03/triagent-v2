@@ -18,10 +18,6 @@ import io.triagent.integration.LabelValues;
 import io.triagent.investigation.ContextCollector;
 import io.triagent.investigation.Evidence;
 
-/**
- * 핵심 지표를 "장애 전 기준값 → 현재 값"으로 비교해 근거로 수집합니다.
- * 숫자 하나보다 변화량이 원인을 좁히는 데 더 도움이 되기 때문입니다.
- */
 @Component
 @ConditionalOnExpression("'${triagent.prometheus.base-url:}' != ''")
 @Slf4j
@@ -55,7 +51,6 @@ public class PrometheusMetricCollector implements ContextCollector {
 				String.join("\n", lines)));
 	}
 
-	/** 지표 하나가 실패해도 나머지 지표는 계속 보여줍니다. */
 	private String describe(String name, String promQl, Instant baselineAt, Instant now) {
 		try {
 			return "- %s: %s → %s".formatted(name, format(prometheusClient.query(promQl, baselineAt)),

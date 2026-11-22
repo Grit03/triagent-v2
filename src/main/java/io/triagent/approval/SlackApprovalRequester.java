@@ -16,11 +16,6 @@ import io.triagent.approval.SlackApprovalMessage.Block;
 import io.triagent.approval.SlackApprovalMessage.Button;
 import io.triagent.notification.SlackProperties;
 
-/**
- * 조치가 요청되면 Slack에 승인, 거절 버튼이 달린 메시지를 보냅니다.
- * <p>
- * Incoming Webhook 메시지에도 버튼을 넣을 수 있고, 버튼을 누르면 Slack 앱의 Interactivity Request URL로 요청이 옵니다.
- */
 @Component
 @ConditionalOnExpression("'${triagent.notification.slack.webhook-url:}' != ''")
 public class SlackApprovalRequester {
