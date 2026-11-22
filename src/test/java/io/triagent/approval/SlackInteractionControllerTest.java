@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 
 import java.net.URLEncoder;
@@ -18,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
@@ -26,6 +28,7 @@ import io.triagent.action.ActionService;
 import io.triagent.action.ActionStatus;
 import io.triagent.action.ActionType;
 import io.triagent.action.CreateActionRequest;
+import io.triagent.action.RemediationAction;
 import io.triagent.incident.IncidentService;
 import io.triagent.incident.OpenIncidentCommand;
 
@@ -45,7 +48,7 @@ class SlackInteractionControllerTest {
 	@Autowired
 	SlackSignatureVerifier signatureVerifier;
 
-	@Autowired
+	@MockitoSpyBean
 	ActionService actionService;
 
 	@Autowired
@@ -82,6 +85,16 @@ class SlackInteractionControllerTest {
 
 		assertThat(actionService.getAction(actionId).status()).isEqualTo(ActionStatus.REJECTED);
 		verify(interactionService).replaceOriginalMessage(eq(RESPONSE_URL), contains("처리할 수 없습니다"));
+	}
+
+	@Test
+	void clickThatLosesToConcurrentDecisionIsReported() {
+		willThrow(new ObjectOptimisticLockingFailureException(RemediationAction.class, actionId)).given(actionService)
+				.approve(actionId, "U_LEAD");
+
+		assertThat(click("approve_action", true)).hasStatusOk();
+
+		verify(interactionService).replaceOriginalMessage(eq(RESPONSE_URL), contains("다른 사람이 먼저 처리했습니다"));
 	}
 
 	@Test
