@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -59,6 +60,11 @@ public class SlackInteractionService {
 		catch (ActionAlreadyDecidedException | ActionNotFoundException | DecisionNotAllowedException ex) {
 			log.info("Slack decision ignored: actionId={}, user={}, reason={}", actionId, userId, ex.getMessage());
 			return ":warning: 조치 %d는 처리할 수 없습니다: %s".formatted(actionId, ex.getMessage());
+		}
+		catch (OptimisticLockingFailureException ex) {
+			// 거의 동시에 다른 사람이 먼저 결정해 커밋한 경우입니다. 이쪽 결정은 롤백되어 실행되지 않습니다.
+			log.info("Slack decision lost to a concurrent decision: actionId={}, user={}", actionId, userId);
+			return ":warning: 조치 %d는 처리할 수 없습니다: 다른 사람이 먼저 처리했습니다.".formatted(actionId);
 		}
 	}
 

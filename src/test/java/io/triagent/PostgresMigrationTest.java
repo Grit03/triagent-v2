@@ -42,7 +42,7 @@ class PostgresMigrationTest {
 	@Test
 	void migrationsApplyAndEntitiesMatchSchema() {
 		assertThat(flyway.info().applied()).extracting(migration -> migration.getVersion().getVersion())
-				.containsExactly("1");
+				.containsExactly("1", "2");
 
 		Long incidentId = incidentService.openIfAbsent(new OpenIncidentCommand("pg-fingerprint", "HighErrorRate",
 				"payment-api", "critical", "5xx > 5%", Instant.parse("2026-11-21T01:00:00Z"))).orElseThrow();
