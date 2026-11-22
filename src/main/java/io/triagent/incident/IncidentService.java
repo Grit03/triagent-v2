@@ -66,7 +66,7 @@ public class IncidentService {
 		Long incidentId = incidentRepository.save(incident).getId();
 		log.info("Incident opened: id={}, alert={}, service={}", incidentId, command.alertName(), command.service());
 		// 조사 시작은 이벤트로 알리기만 합니다. IncidentService는 누가 조사하는지 알 필요가 없습니다.
-		eventPublisher.publishEvent(new IncidentOpenedEvent(incidentId));
+		eventPublisher.publishEvent(new IncidentOpenedEvent(incidentId, Instant.now()));
 		return Optional.of(incidentId);
 	}
 
@@ -83,7 +83,7 @@ public class IncidentService {
 					// 변경 감지(dirty checking)로 커밋 시점에 UPDATE되므로 save()를 다시 부르지 않습니다.
 					incident.resolve(resolvedAt);
 					log.info("Incident resolved: id={}", incident.getId());
-					eventPublisher.publishEvent(new IncidentResolvedEvent(incident.getId()));
+					eventPublisher.publishEvent(new IncidentResolvedEvent(incident.getId(), Instant.now()));
 					return incident.getId();
 				})
 				.toList();

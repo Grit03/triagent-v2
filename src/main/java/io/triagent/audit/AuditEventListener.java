@@ -1,7 +1,5 @@
 package io.triagent.audit;
 
-import java.time.Instant;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,14 +49,14 @@ public class AuditEventListener {
 					.map(incident -> "%s (%s, %s)".formatted(incident.alertName(), incident.service(),
 							incident.severity()))
 					.orElse(null);
-			auditLogService.record(Instant.now(), ALERTMANAGER, AuditEventType.INCIDENT_OPENED, event.incidentId(), null, detail);
+			auditLogService.record(event.openedAt(), ALERTMANAGER, AuditEventType.INCIDENT_OPENED, event.incidentId(), null, detail);
 		});
 	}
 
 	@TransactionalEventListener
 	public void onIncidentResolved(IncidentResolvedEvent event) {
 		recordSafely(() -> {
-			auditLogService.record(Instant.now(), ALERTMANAGER, AuditEventType.INCIDENT_RESOLVED, event.incidentId(), null, null);
+			auditLogService.record(event.resolvedAt(), ALERTMANAGER, AuditEventType.INCIDENT_RESOLVED, event.incidentId(), null, null);
 		});
 	}
 
@@ -87,7 +85,7 @@ public class AuditEventListener {
 	public void onDecisionDenied(ActionDecisionDeniedEvent event) {
 		recordSafely(() -> {
 			ActionResponse action = actionService.getAction(event.actionId());
-			auditLogService.record(Instant.now(), event.userId(), AuditEventType.ACTION_DENIED, action.incidentId(),
+			auditLogService.record(event.deniedAt(), event.userId(), AuditEventType.ACTION_DENIED, action.incidentId(),
 					action.id(), event.reason());
 		});
 	}

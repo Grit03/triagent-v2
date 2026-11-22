@@ -23,7 +23,7 @@ import io.triagent.incident.OpenIncidentCommand;
 @SpringBootTest
 @AutoConfigureMockMvc
 @RecordApplicationEvents
-class ActionControllerTest {
+class IncidentActionControllerTest {
 
 	@Autowired
 	ApplicationEvents events;
