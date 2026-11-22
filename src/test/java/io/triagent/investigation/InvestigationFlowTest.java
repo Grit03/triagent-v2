@@ -43,7 +43,13 @@ class InvestigationFlowTest {
                 .hasStatus(HttpStatus.ACCEPTED);
 
         // 조사는 다른 스레드에서 진행되므로, 최대 5초까지 보고가 오기를 기다립니다.
+        // Claude 없이 규칙 기반으로 분석하므로 요청된 조치는 없어야 하고, 조회는 성공해야 합니다(null이 아님).
         verify(loggingNotifier, timeout(5000))
-                .send(argThat(report -> report.incident().service().equals("payment-api")));
+                .send(
+                        argThat(
+                                report ->
+                                        report.incident().service().equals("payment-api")
+                                                && report.requestedActions() != null
+                                                && report.requestedActions().isEmpty()));
     }
 }

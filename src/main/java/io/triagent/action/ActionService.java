@@ -5,6 +5,7 @@ import io.triagent.incident.IncidentNotFoundException;
 import io.triagent.incident.IncidentService;
 import io.triagent.incident.IncidentSnapshot;
 import java.time.Instant;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -86,6 +87,12 @@ public class ActionService {
 
     public ActionResponse getAction(Long actionId) {
         return ActionResponse.from(findAction(actionId));
+    }
+
+    public List<ActionResponse> getActions(Long incidentId) {
+        return actionRepository.findByIncidentIdOrderByIdAsc(incidentId).stream()
+                .map(ActionResponse::from)
+                .toList();
     }
 
     /** 예외로 트랜잭션이 롤백되어도 거부 사실이 감사 로그에 남도록, 거부 이벤트를 발행한 뒤 예외를 다시 던집니다. */
