@@ -1,0 +1,10 @@
+{
+  "description": "며칠간 배포가 없었고 DB 커넥션 풀이 고갈됐습니다. 롤백이나 재시작으로 해결된다는 근거가 없습니다.",
+  "expectedAction": null,
+  "incident": {"id": 1, "alertName": "HighErrorRate", "service": "payment-api", "severity": "critical", "summary": "5xx error rate is above 5%", "startedAt": "2026-11-21T01:00:00Z"},
+  "evidences": [
+    {"source": "github", "success": true, "content": "acme/payment-api: 장애 전 24시간 동안 커밋이 없습니다."},
+    {"source": "loki", "success": true, "content": "에러 로그 2건 (최신순)\n- 2026-11-21T01:00:41Z ERROR PaymentApiApplication - Payment failed (version=1.7.3, deployedAt=2026-11-18T01:00:00Z) java.lang.IllegalStateException: Connection pool exhausted: payment-db (active=20, max=20)\n- 2026-11-21T01:00:40Z ERROR PaymentApiApplication - Payment failed (version=1.7.3, deployedAt=2026-11-18T01:00:00Z) java.lang.IllegalStateException: Connection pool exhausted: payment-db (active=20, max=20)"},
+    {"source": "prometheus", "success": true, "content": "기준: 장애 30분 전 → 현재\n- error-rate: 0.0000 → 0.4800\n- p95-latency-seconds: 0.0035 → 0.0040"}
+  ]
+}

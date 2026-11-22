@@ -43,5 +43,26 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform {
+		// 실제 Claude API를 호출하는 평가는 비용이 들어 기본 테스트와 CI에서 제외합니다.
+		excludeTags 'eval'
+	}
+}
+
+// 에이전트 회귀 평가(F14). ANTHROPIC_API_KEY가 필요하고 호출 비용이 듭니다.
+// 예: ./gradlew eval -Peval.model=claude-opus-5-5 -Peval.repeat=5
+tasks.register('eval', Test) {
+	description = 'Runs agent evaluation scenarios against the real Claude API.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'eval'
+	}
+	systemProperties providers.gradlePropertiesPrefixedBy('eval.').get()
+	// 같은 입력이어도 모델 응답이 달라지므로 매번 새로 실행합니다.
+	outputs.upToDateWhen { false }
+	testLogging {
+		showStandardStreams = true
+	}
 }
