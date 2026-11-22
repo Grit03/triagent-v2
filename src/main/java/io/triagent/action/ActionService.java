@@ -101,7 +101,8 @@ public class ActionService {
 			decision.run();
 		}
 		catch (DecisionNotAllowedException ex) {
-			eventPublisher.publishEvent(new ActionDecisionDeniedEvent(action.getId(), userId, ex.getMessage()));
+			eventPublisher.publishEvent(new ActionDecisionDeniedEvent(action.getId(), userId, ex.getMessage(),
+					Instant.now()));
 			throw ex;
 		}
 	}
