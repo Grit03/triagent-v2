@@ -1,5 +1,7 @@
 package io.triagent.investigation;
 
+import io.triagent.action.ActionResponse;
+import io.triagent.action.ActionService;
 import io.triagent.incident.IncidentService;
 import io.triagent.incident.IncidentSnapshot;
 import java.util.List;
@@ -20,6 +22,8 @@ public class InvestigationService {
 
     private final IncidentAnalyzer analyzer;
 
+    private final ActionService actionService;
+
     private final List<Notifier> notifiers;
 
     public void investigate(Long incidentId) {
@@ -32,8 +36,20 @@ public class InvestigationService {
         List<Evidence> evidences =
                 collectors.stream().map(collector -> collectSafely(collector, incident)).toList();
         String analysis = analyzer.analyze(incident, evidences);
-        InvestigationReport report = new InvestigationReport(incident, evidences, analysis);
+        InvestigationReport report =
+                new InvestigationReport(
+                        incident, evidences, analysis, findRequestedActions(incident.id()));
         notifiers.forEach(notifier -> notifySafely(notifier, report));
+    }
+
+    /** 조회에 실패해도 보고는 보내야 하므로 예외 대신 null을 돌려줍니다. 알림 채널이 "확인하지 못함"으로 표시합니다. */
+    private List<ActionResponse> findRequestedActions(Long incidentId) {
+        try {
+            return actionService.getActions(incidentId);
+        } catch (RuntimeException ex) {
+            log.warn("Failed to load requested actions: incidentId={}", incidentId, ex);
+            return null;
+        }
     }
 
     private Evidence collectSafely(ContextCollector collector, IncidentSnapshot incident) {

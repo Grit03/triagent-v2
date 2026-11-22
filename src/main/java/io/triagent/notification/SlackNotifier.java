@@ -1,5 +1,7 @@
 package io.triagent.notification;
 
+import io.triagent.action.ActionResponse;
+import io.triagent.action.ActionStatus;
 import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import io.triagent.investigation.InvestigationReport;
@@ -65,6 +67,7 @@ public class SlackNotifier implements Notifier {
                 List.of(
                         Block.header(title),
                         Block.section(overview),
+                        Block.section(formatRequestedActions(report.requestedActions())),
                         Block.section("*분석*\n" + truncate(toSlackBold(report.analysis()))),
                         Block.section("*조사 근거*\n" + truncate(evidenceText))));
     }
@@ -82,6 +85,37 @@ public class SlackNotifier implements Notifier {
         return text.length() <= MAX_SECTION_LENGTH
                 ? text
                 : text.substring(0, MAX_SECTION_LENGTH) + "\n...(생략)";
+    }
+
+    /** 분석 텍스트는 모델이 쓴 것이라, 실제로 요청된 조치는 DB 기준으로 분석보다 앞에 따로 보여 줍니다. */
+    static String formatRequestedActions(List<ActionResponse> actions) {
+        if (actions == null) {
+            return "*요청된 조치*\n:warning: 조치 요청 내역을 확인하지 못했습니다. 채널의 승인 요청 메시지를 직접 확인하세요.";
+        }
+        if (actions.isEmpty()) {
+            return "*요청된 조치*\n없음. 분석에 조치가 적혀 있어도 승인 요청은 나가지 않았습니다.";
+        }
+        return "*요청된 조치*\n"
+                + actions.stream()
+                        .map(
+                                action ->
+                                        "• `%s` 조치 ID %d, %s (요청자 `%s`)"
+                                                .formatted(
+                                                        action.type(),
+                                                        action.id(),
+                                                        statusLabel(action.status()),
+                                                        action.requestedBy()))
+                        .collect(Collectors.joining("\n"));
+    }
+
+    private static String statusLabel(ActionStatus status) {
+        return switch (status) {
+            case PENDING -> "승인 대기";
+            case APPROVED -> "승인됨";
+            case REJECTED -> "거절됨";
+            case EXECUTED -> "실행됨";
+            case FAILED -> "실행 실패";
+        };
     }
 
     private static String formatEvidence(Evidence evidence) {
