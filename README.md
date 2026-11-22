@@ -62,24 +62,33 @@ Compose에는 장애를 재현하기 위한 구성이 함께 들어 있습니다
 | `loki` | `payment-api`가 보내는 로그를 같은 라벨로 저장합니다 | http://localhost:3100 |
 | `alertmanager` | Prometheus 알림을 Triagent 웹훅으로 전달합니다([알림 규칙](demo/alert-rules.yml)) | http://localhost:9093 |
 
-결제 요청의 절반이 실패하도록 장애를 일으킵니다. `rate=0`으로 다시 보내면 정상으로 돌아옵니다.
+장애 시나리오를 골라 장애를 일으킵니다. `name=NONE`으로 보내면 정상으로 돌아옵니다.
 
 ```bash
-curl -X PUT "http://localhost:8081/chaos/error-rate?rate=0.5"
+curl -X PUT "http://localhost:8081/chaos/scenario?name=BAD_DEPLOY"
 ```
+
+시나리오마다 원인이 달라서 로그, 응답 코드, 지연이 다르고, 맞는 조치도 다릅니다. 모든 에러 로그에는 실행 중인 버전과 배포 시각이 함께 찍힙니다.
+
+| 시나리오 | 증상 | 에러 로그 | 기대하는 판단 |
+| --- | --- | --- | --- |
+| `DB_POOL` | 요청 50% 즉시 500 | `Connection pool exhausted: payment-db` | 조치 제안 없음. 며칠 전 배포 그대로이고 DB 쪽 확인이 먼저입니다 |
+| `BAD_DEPLOY` | 버전이 방금 1.8.0으로 바뀌고 요청 60% 500 | 수수료 계산(`calculateFee`)의 `NullPointerException` | 롤백 제안 |
+| `MEMORY_LEAK` | 응답 0.8초, 요청 30% 503 | `OutOfMemoryError: Java heap space` | 재시작 제안 |
+| `SLOW_GATEWAY` | 응답 2초, 요청 20% 504 | 외부 결제 게이트웨이 `Read timed out` | 조치 제안 없음. 우리 서버를 바꿔도 해결되지 않습니다 |
 
 그 뒤로는 사람이 알림을 보내지 않아도 아래 순서로 이어집니다. 괄호 안은 로컬에서 직접 잰 시간입니다.
 
 1. Prometheus가 최근 1분 에러율이 5%를 넘는 상태가 30초 이어진 것을 보고 `HighErrorRate` 알림을 냅니다.
 2. Alertmanager가 알림을 Triagent로 보내고, Triagent가 장애를 엽니다(장애를 일으킨 지 약 50초).
 3. Triagent가 Prometheus에서 장애 30분 전과 현재의 에러율을, Loki에서 `Connection pool exhausted` 에러 로그를 근거로 모아 보고합니다. 스택을 띄운 지 30분이 안 됐다면 장애 전 값은 `데이터 없음`으로 나옵니다.
-4. `rate=0`으로 되돌리면 Alertmanager가 해소 알림을 보내고, Triagent가 장애를 `RESOLVED`로 닫습니다(되돌린 지 약 90초).
+4. `name=NONE`으로 되돌리면 Alertmanager가 해소 알림을 보내고, Triagent가 장애를 `RESOLVED`로 닫습니다(되돌린 지 약 90초).
 
 보고는 Slack을 설정했다면 Slack으로, 아니면 `docker compose logs triagent`에 남습니다. `ANTHROPIC_API_KEY`를 넣으면 Claude가 근거를 분석하고, 근거가 충분할 때 조치를 제안합니다.
 
 데모는 API 비용을 줄이기 위해 `claude-haiku-5-5`, effort `low`, 최대 4000토큰으로 실행합니다. 운영 기본값(`claude-opus-5-5`, effort `medium`)으로 돌려 보려면 `.env`에 `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`, `ANTHROPIC_MAX_TOKENS`를 넣습니다. 장애 하나에 분석은 한 번만 실행됩니다. 같은 장애의 알림이 반복돼도 새 장애를 만들지 않기 때문입니다.
 
-실제 Slack과 Claude(Haiku 5.5)로 돌린 결과는 다음과 같습니다.
+실제 Slack과 Claude(Haiku 5.5)로 `DB_POOL`과 같은 장애를 돌린 결과는 다음과 같습니다.
 
 - 장애를 일으키고 44초 뒤 장애가 열렸고, 약 11초 뒤 분석이 담긴 보고가 Slack 채널에 도착했습니다.
 - Claude는 Loki 에러 로그 20건이 모두 `Connection pool exhausted: payment-db`인 점을 들어 커넥션 풀 고갈을 가장 유력한 원인으로 꼽았습니다. GitHub 저장소가 연결되지 않았고 장애 전 지표가 없다는 점도 함께 적었습니다.
