@@ -102,7 +102,7 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 		try {
 			ProposeRemediation proposal = toolUse.input(ProposeRemediation.class);
 			Long actionId = actionService.request(incident.id(),
-					new CreateActionRequest(proposal.type, AGENT_ACTOR, proposal.reason)).id();
+					new CreateActionRequest(proposal.type, proposal.reason), AGENT_ACTOR).id();
 			log.info("Agent proposed action: incidentId={}, actionId={}, type={}", incident.id(), actionId,
 					proposal.type);
 			return result.content("조치 %d로 승인 대기 요청을 등록했습니다. 아직 실행되지 않았습니다.".formatted(actionId)).build();
