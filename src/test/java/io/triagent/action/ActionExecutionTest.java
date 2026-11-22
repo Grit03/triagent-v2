@@ -1,19 +1,23 @@
 package io.triagent.action;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.verify;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import io.triagent.incident.IncidentService;
 import io.triagent.incident.OpenIncidentCommand;
@@ -30,6 +34,12 @@ class ActionExecutionTest {
 	@Autowired
 	IncidentService incidentService;
 
+	@Autowired
+	RemediationActionRepository actionRepository;
+
+	@Autowired
+	TransactionTemplate transactionTemplate;
+
 	@MockitoSpyBean
 	DryRunActionExecutor executor;
 
@@ -40,7 +50,7 @@ class ActionExecutionTest {
 		Long incidentId = incidentService.openIfAbsent(new OpenIncidentCommand("exec-" + System.nanoTime(),
 				"HighErrorRate", "payment-api", "critical", null, Instant.parse("2026-11-21T01:00:00Z")))
 				.orElseThrow();
-		actionId = actionService.request(incidentId, new CreateActionRequest(ActionType.ROLLBACK, "U_ONCALL", null))
+		actionId = actionService.request(incidentId, new CreateActionRequest(ActionType.ROLLBACK, null), "U_ONCALL")
 				.id();
 	}
 
@@ -74,6 +84,23 @@ class ActionExecutionTest {
 
 		verify(executor, after(500).never()).execute(ActionType.ROLLBACK, "payment-api");
 		assertThat(actionService.getAction(actionId).status()).isEqualTo(ActionStatus.REJECTED);
+	}
+
+	/**
+	 * 두 사람이 거의 동시에 결정하는 상황을 순서를 고정해 재현합니다.
+	 * 승인 쪽이 PENDING을 읽은 뒤, 다른 스레드의 거절이 먼저 커밋되면 승인 쪽 커밋은 실패하고 실행되지 않아야 합니다.
+	 */
+	@Test
+	@DisplayName("동시에 결정하면 나중에 커밋한 쪽은 실패하고 실행되지 않는다")
+	void concurrentDecision() {
+		assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status -> {
+			RemediationAction action = actionRepository.findById(actionId).orElseThrow();
+			CompletableFuture.runAsync(() -> actionService.reject(actionId, "U_ONCALL")).join();
+			action.approve("U_LEAD", Instant.now());
+		})).isInstanceOf(ObjectOptimisticLockingFailureException.class);
+
+		assertThat(actionService.getAction(actionId).status()).isEqualTo(ActionStatus.REJECTED);
+		verify(executor, after(500).never()).execute(ActionType.ROLLBACK, "payment-api");
 	}
 
 	/** 실행은 다른 스레드에서 진행되므로, 상태가 바뀔 때까지 최대 5초 기다립니다. */

@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 /**
  * 장애를 해결하기 위해 요청된 조치 한 건(롤백, 재배포, 재시작).
@@ -59,6 +60,13 @@ public class RemediationAction {
 	private String result;
 
 	private Instant finishedAt;
+
+	/**
+	 * 낙관적 락(optimistic lock)용 버전. 두 사람이 동시에 승인, 거절하면 둘 다 PENDING을 읽고 결정할 수 있는데,
+	 * UPDATE 조건에 버전을 넣어 나중에 커밋하는 쪽이 실패하게 합니다. 그래야 승인된 조치가 두 번 실행되지 않습니다.
+	 */
+	@Version
+	private long version;
 
 
 	protected RemediationAction() {

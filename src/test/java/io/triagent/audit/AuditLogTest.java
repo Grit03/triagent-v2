@@ -44,7 +44,7 @@ class AuditLogTest {
 		String fingerprint = "audit-" + System.nanoTime();
 		Long incidentId = incidentService.openIfAbsent(new OpenIncidentCommand(fingerprint, "HighErrorRate",
 				"payment-api", "critical", null, Instant.parse("2026-11-21T01:00:00Z"))).orElseThrow();
-		actionService.request(incidentId, new CreateActionRequest(ActionType.ROLLBACK, "U_ONCALL", "5xx 증가"));
+		actionService.request(incidentId, new CreateActionRequest(ActionType.ROLLBACK, "5xx 증가"), "U_ONCALL");
 		incidentService.resolveIfOpen(fingerprint, Instant.parse("2026-11-21T01:30:00Z"));
 
 		var logs = assertThat(mvc.get().uri("/api/v1/audit-logs?incidentId={id}", incidentId)).hasStatusOk().bodyJson();
@@ -60,7 +60,7 @@ class AuditLogTest {
 	void decisionAndExecution() throws InterruptedException {
 		Long incidentId = openIncident();
 		Long actionId = actionService.request(incidentId,
-				new CreateActionRequest(ActionType.RESTART, "U_ONCALL", null)).id();
+				new CreateActionRequest(ActionType.RESTART, null), "U_ONCALL").id();
 
 		assertThatThrownBy(() -> actionService.approve(actionId, "U_STRANGER"))
 				.isInstanceOf(DecisionNotAllowedException.class);
@@ -81,7 +81,7 @@ class AuditLogTest {
 	void rejection() {
 		Long incidentId = openIncident();
 		Long actionId = actionService.request(incidentId,
-				new CreateActionRequest(ActionType.REDEPLOY, "U_ONCALL", null)).id();
+				new CreateActionRequest(ActionType.REDEPLOY, null), "U_ONCALL").id();
 
 		actionService.reject(actionId, "U_ONCALL");
 
