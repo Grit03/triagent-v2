@@ -10,10 +10,6 @@ import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import io.triagent.investigation.IncidentAnalyzer;
 
-/**
- * LLM을 쓸 수 없을 때(키 없음, 장애, 거절) 사용하는 규칙 기반 요약.
- * 원인을 추론하지는 않고, 당직자가 먼저 볼 곳만 짚어 줍니다.
- */
 @Component
 public class RuleBasedIncidentAnalyzer implements IncidentAnalyzer {
 

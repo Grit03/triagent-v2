@@ -7,9 +7,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * {@code triagent.loki.*} 설정.
- *
- * @param baseUrl Loki 주소
  * @param query 에러 로그를 찾는 LogQL 템플릿. {@code %s}에 서비스 이름이 들어갑니다
  * @param lookback 장애 시작 시각 기준으로 얼마나 이전 로그까지 볼지
  * @param limit 가져올 최대 로그 줄 수

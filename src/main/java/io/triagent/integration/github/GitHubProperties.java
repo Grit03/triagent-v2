@@ -8,8 +8,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * {@code triagent.github.*} 설정.
- *
  * @param baseUrl GitHub REST API 주소(GitHub Enterprise를 쓰면 바꿉니다)
  * @param token Personal Access Token. 비어 있으면 인증 없이 호출합니다
  * @param lookback 장애 시작 시각 기준으로 얼마나 이전 커밋까지 볼지

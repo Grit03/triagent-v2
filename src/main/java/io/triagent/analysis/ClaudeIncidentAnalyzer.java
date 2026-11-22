@@ -21,9 +21,6 @@ import io.triagent.incident.IncidentSnapshot;
 import io.triagent.investigation.Evidence;
 import io.triagent.investigation.IncidentAnalyzer;
 
-/**
- * Claude에 장애 근거를 전달해 원인 후보와 권장 조치를 받아 옵니다.
- */
 @Slf4j
 @RequiredArgsConstructor
 public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
@@ -43,10 +40,8 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 
 			근거에 없는 사실을 지어내지 마세요. 근거가 부족하면 그렇다고 말하세요.""";
 
-	/** 도구 호출이 끝없이 이어지지 않도록 요청 횟수를 제한합니다. */
 	static final int MAX_TURNS = 4;
 
-	/** 에이전트가 요청한 조치의 요청자. 사람이 아니므로 F9 규칙상 누구든 담당 팀원이 승인할 수 있습니다. */
 	static final String AGENT_ACTOR = "triagent-agent";
 
 	private final AnthropicClient client;
@@ -69,7 +64,6 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 				.addTool(ProposeRemediation.class)
 				.addUserMessage(userMessage(incident, evidences));
 
-		// 도구 호출 루프: 모델이 도구를 부르면(stop_reason=tool_use) 결과를 돌려주고 다시 요청합니다.
 		for (int turn = 1; turn <= MAX_TURNS; turn++) {
 			BetaMessage response = client.beta().messages().create(request.build());
 			if (response.stopReason().filter(BetaStopReason.REFUSAL::equals).isPresent()) {
@@ -87,9 +81,7 @@ public class ClaudeIncidentAnalyzer implements IncidentAnalyzer {
 		throw new IllegalStateException("Claude did not finish within " + MAX_TURNS + " turns");
 	}
 
-	/**
-	 * 도구 실행 = 승인 대기 조치 요청. 실패해도 예외를 던지지 않고 오류 결과를 모델에게 돌려줘, 모델이 분석을 마칠 수 있게 합니다.
-	 */
+	/** 실패해도 예외를 던지지 않고 오류 결과를 모델에게 돌려줘, 모델이 분석을 마칠 수 있게 합니다. */
 	private BetaToolResultBlockParam runTool(IncidentSnapshot incident, BetaToolUseBlock toolUse) {
 		BetaToolResultBlockParam.Builder result = BetaToolResultBlockParam.builder().toolUseId(toolUse.id());
 		try {

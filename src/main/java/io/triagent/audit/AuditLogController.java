@@ -9,9 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 감사 로그 조회 API. 수정, 삭제 API는 두지 않습니다.
- */
 @RestController
 @RequestMapping("/api/v1/audit-logs")
 @RequiredArgsConstructor

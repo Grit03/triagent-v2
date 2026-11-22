@@ -5,11 +5,7 @@ import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * {@code triagent.access.*} 설정. 팀마다 구성원과 담당 서비스를 적습니다.
- *
- * @param teams 팀 이름 → 팀 정보
- */
+/** @param teams 팀 이름 → 팀 정보 */
 @ConfigurationProperties("triagent.access")
 public record AccessProperties(Map<String, Team> teams) {
 

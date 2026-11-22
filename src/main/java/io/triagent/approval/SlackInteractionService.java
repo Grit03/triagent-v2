@@ -15,9 +15,6 @@ import io.triagent.action.ActionService;
 import io.triagent.action.DecisionNotAllowedException;
 import io.triagent.approval.SlackInteractionPayload.Action;
 
-/**
- * 서명 검증을 통과한 버튼 클릭을 승인 또는 거절로 처리하고, 결과로 원래 Slack 메시지를 바꿉니다.
- */
 @Service
 @Slf4j
 public class SlackInteractionService {

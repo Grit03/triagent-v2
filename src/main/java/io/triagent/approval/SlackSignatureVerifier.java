@@ -17,10 +17,9 @@ import org.springframework.stereotype.Component;
 import io.triagent.notification.SlackProperties;
 
 /**
- * 요청이 Slack에서 왔는지 Signing Secret으로 검증합니다.
+ * 서명 = "v0=" + hex(HMAC-SHA256(signingSecret, "v0:" + 타임스탬프 + ":" + 원본 요청 본문))
  * <p>
  * https://docs.slack.dev/authentication/verifying-requests-from-slack
- * 서명 = "v0=" + hex(HMAC-SHA256(signingSecret, "v0:" + 타임스탬프 + ":" + 원본 요청 본문))
  */
 @Component
 class SlackSignatureVerifier {
@@ -37,7 +36,6 @@ class SlackSignatureVerifier {
 		this(properties, Clock.systemUTC());
 	}
 
-	/** 테스트에서 현재 시각을 고정하기 위한 생성자 */
 	SlackSignatureVerifier(SlackProperties properties, Clock clock) {
 		this.signingSecret = properties.signingSecret();
 		this.clock = clock;

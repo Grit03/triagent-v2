@@ -28,11 +28,6 @@ public class ActionService {
 
 	private final ApplicationEventPublisher eventPublisher;
 
-	/**
-	 * 조치를 승인 대기 상태로 저장합니다. 요청만으로는 아무것도 실행되지 않습니다.
-	 *
-	 * @param requestedBy 서버가 확인한 요청자(예: {@code triagent-agent}). 요청 본문의 값을 그대로 넘기면 안 됩니다.
-	 */
 	@Transactional
 	public ActionResponse request(Long incidentId, CreateActionRequest request, String requestedBy) {
 		IncidentSnapshot incident = incidentService.findSnapshot(incidentId)
@@ -46,9 +41,6 @@ public class ActionService {
 		return ActionResponse.from(saved);
 	}
 
-	/**
-	 * 승인만 기록하고 실행은 커밋 이후 별도 스레드에서 합니다. 실행이 오래 걸려도 승인 요청은 바로 끝납니다.
-	 */
 	@Transactional
 	public ActionResponse approve(Long actionId, String approver) {
 		RemediationAction action = findAction(actionId);
@@ -85,9 +77,7 @@ public class ActionService {
 		return ActionResponse.from(findAction(actionId));
 	}
 
-	/**
-	 * 권한이 없으면 거부 이벤트를 발행하고 예외를 다시 던집니다. 예외로 트랜잭션이 롤백되어도 거부 사실은 감사 로그에 남깁니다.
-	 */
+	/** 예외로 트랜잭션이 롤백되어도 거부 사실이 감사 로그에 남도록, 거부 이벤트를 발행한 뒤 예외를 다시 던집니다. */
 	private void decideOrPublishDenial(RemediationAction action, String userId, Runnable decision) {
 		try {
 			checkCanDecide(userId, action);

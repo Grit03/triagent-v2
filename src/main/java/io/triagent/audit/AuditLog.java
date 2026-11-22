@@ -16,9 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
-/**
- * "누가, 언제, 무엇을 했는지" 한 줄. 한 번 쓰면 바꾸지 않으므로 상태 변경 메서드가 없습니다.
- */
 @Entity
 @Table(name = "audit_log", indexes = @Index(name = "idx_audit_log_incident", columnList = "incidentId, occurredAt"))
 @Getter
@@ -34,7 +31,6 @@ public class AuditLog {
 	@Column(nullable = false, updatable = false)
 	private Instant occurredAt;
 
-	/** 행동한 사람 또는 시스템(예: Slack 사용자 ID, alertmanager) */
 	@Column(nullable = false, updatable = false)
 	private String actor;
 

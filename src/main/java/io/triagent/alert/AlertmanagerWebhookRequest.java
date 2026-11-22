@@ -9,12 +9,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
-/**
- * Prometheus Alertmanager 웹훅 요청 본문.
- * <p>
- * 형식: https://prometheus.io/docs/alerting/latest/configuration/#webhook_config
- * 우리가 쓰지 않는 필드(groupKey, receiver 등)는 Jackson이 무시합니다.
- */
 public record AlertmanagerWebhookRequest(
 		@NotBlank String status,
 		Map<String, String> commonLabels,
@@ -36,7 +30,6 @@ public record AlertmanagerWebhookRequest(
 			return labels.getOrDefault("alertname", "unknown");
 		}
 
-		/** service 라벨이 없으면 Prometheus가 기본으로 붙이는 job 라벨을 씁니다. */
 		public String service() {
 			String job = labels.getOrDefault("job", "unknown");
 			return labels.getOrDefault("service", job);
@@ -46,7 +39,6 @@ public record AlertmanagerWebhookRequest(
 			return labels.getOrDefault("severity", "none");
 		}
 
-		/** summary 어노테이션이 없으면 description을 씁니다. */
 		public String summary() {
 			if (annotations == null) {
 				return null;
@@ -55,7 +47,6 @@ public record AlertmanagerWebhookRequest(
 			return annotations.getOrDefault("summary", description);
 		}
 
-		/** resolved 알림에 endsAt이 없으면 받은 시각을 해소 시각으로 씁니다. */
 		public Instant resolvedAt() {
 			return endsAt != null ? endsAt : Instant.now();
 		}

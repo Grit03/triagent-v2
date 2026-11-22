@@ -15,9 +15,6 @@ import io.triagent.integration.loki.LokiClient.LogLine;
 import io.triagent.investigation.ContextCollector;
 import io.triagent.investigation.Evidence;
 
-/**
- * 장애 시작 전후의 에러 로그를 근거로 수집합니다.
- */
 @Component
 @ConditionalOnExpression("'${triagent.loki.base-url:}' != ''")
 @RequiredArgsConstructor
@@ -25,7 +22,6 @@ public class LokiLogCollector implements ContextCollector {
 
 	static final String SOURCE = "loki";
 
-	/** Slack 메시지가 너무 길어지지 않도록 로그 한 줄은 이 길이에서 자릅니다. */
 	private static final int MAX_LINE_LENGTH = 200;
 
 	private final LokiClient lokiClient;
@@ -41,7 +37,6 @@ public class LokiLogCollector implements ContextCollector {
 	public Evidence collect(IncidentSnapshot incident) {
 		String logQl = properties.query().formatted(LabelValues.escape(incident.service()));
 		Instant start = incident.startedAt().minus(properties.lookback());
-		// 알림은 보통 문제가 생기고 조금 뒤에 오므로, 장애 시작 이후 로그도 지금까지 함께 봅니다.
 		Instant end = Instant.now();
 		List<LogLine> lines = lokiClient.queryRange(logQl, start, end, properties.limit());
 		if (lines.isEmpty()) {

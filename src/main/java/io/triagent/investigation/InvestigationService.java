@@ -11,12 +11,7 @@ import org.springframework.stereotype.Service;
 import io.triagent.incident.IncidentService;
 import io.triagent.incident.IncidentSnapshot;
 
-/**
- * 장애 하나를 조사하고 보고하는 워크플로: 근거 수집 → 원인 분석 → 메신저 전송.
- * <p>
- * 외부 API 호출이 길어질 수 있으므로 DB 트랜잭션을 걸지 않습니다.
- * 수집, 분석, 전송은 이 패키지의 인터페이스로만 호출하므로 investigation은 구현 패키지를 알지 못합니다.
- */
+/** 외부 API 호출이 길어질 수 있으므로 DB 트랜잭션을 걸지 않습니다. */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -43,7 +38,6 @@ public class InvestigationService {
 		notifiers.forEach(notifier -> notifySafely(notifier, report));
 	}
 
-	/** 도구 하나가 실패해도 나머지 조사는 계속합니다. */
 	private Evidence collectSafely(ContextCollector collector, IncidentSnapshot incident) {
 		try {
 			return collector.collect(incident);

@@ -16,8 +16,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Slack 앱의 Interactivity Request URL로 등록하는 엔드포인트. 버튼을 누르면 Slack이 이 주소로 요청을 보냅니다.
- * <p>
  * 서명은 Slack이 보낸 바이트 그대로의 본문으로 계산해야 합니다. {@code @RequestParam}이나 {@code @RequestBody}로 받으면
  * Spring이 폼 파라미터를 다시 인코딩한 본문을 줄 수 있어, 서블릿 입력 스트림에서 원본을 직접 읽습니다.
  */

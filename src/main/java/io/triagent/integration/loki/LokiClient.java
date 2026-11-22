@@ -8,9 +8,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-/**
- * Loki HTTP API 호출만 담당합니다.
- */
 @Component
 @ConditionalOnExpression("'${triagent.loki.base-url:}' != ''")
 public class LokiClient {
@@ -21,9 +18,6 @@ public class LokiClient {
 		this.restClient = restClientBuilder.baseUrl(properties.baseUrl().toString()).build();
 	}
 
-	/**
-	 * 기간 안에서 LogQL에 맞는 로그를 최신순으로 최대 {@code limit}줄 가져옵니다.
-	 */
 	public List<LogLine> queryRange(String logQl, Instant start, Instant end, int limit) {
 		LokiQueryResponse response = restClient.get()
 				.uri(uri -> uri.path("/loki/api/v1/query_range")
@@ -39,7 +33,6 @@ public class LokiClient {
 		if (response == null || response.data() == null || response.data().result() == null) {
 			return List.of();
 		}
-		// 스트림(라벨 조합)별로 나뉜 결과를 하나로 합쳐 최신순으로 정렬합니다.
 		return response.data().result().stream()
 				.flatMap(stream -> stream.values().stream())
 				.map(LokiClient::toLogLine)
@@ -48,7 +41,6 @@ public class LokiClient {
 				.toList();
 	}
 
-	/** Loki는 로그 한 줄을 ["나노초 타임스탬프", "로그 내용"] 배열로 돌려줍니다. */
 	private static LogLine toLogLine(List<String> entry) {
 		String epochNanos = entry.get(0);
 		String line = entry.get(1);

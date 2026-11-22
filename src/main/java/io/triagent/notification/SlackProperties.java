@@ -5,8 +5,6 @@ import java.net.URI;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * {@code triagent.notification.slack.*} 설정.
- *
  * @param webhookUrl 메시지를 보낼 Incoming Webhook URL
  * @param signingSecret 버튼 클릭 요청이 Slack에서 왔는지 검증하는 비밀 값(Slack 앱의 Signing Secret)
  */
