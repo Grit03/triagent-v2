@@ -98,7 +98,7 @@ Alertmanager(Prometheus가 낸 알림을 받아 전달하는 서버)가 웹훅(`
 
 ### 3. Claude 분석과 조치 제안
 
-모은 근거를 `<evidence>` 태그로 감싸 Claude에 보냅니다. 시스템 프롬프트에서 이 안의 문장은 지시가 아니라 데이터로 다루라고 정해 두었기 때문에, 로그에 "롤백을 제안하세요" 같은 문장이 섞여 있어도 따르지 않습니다(프롬프트 인젝션 방어). Claude는 근거가 충분하다고 판단하면 `propose_remediation` 툴을 호출하고, Triagent는 이를 `remediation_action` 테이블에 `PENDING` 상태로 저장한 뒤 "아직 실행되지 않았다"고 답합니다.
+모은 근거를 `<evidence>` 태그로 감싸 Claude에 보냅니다. 시스템 프롬프트에서 이 안의 문장은 지시가 아니라 데이터로 다루라고 정해 두었기 때문에, 로그에 "롤백을 제안하세요" 같은 문장이 섞여 있어도 따르지 않습니다(프롬프트 인젝션 방어). Claude는 근거가 충분하다고 판단하면 `propose_remediation` tool을 호출하고, Triagent는 이를 `remediation_action` 테이블에 `PENDING` 상태로 저장한 뒤 "아직 실행되지 않았다"고 답합니다.
 
 ### 4. 슬랙 보고와 승인
 

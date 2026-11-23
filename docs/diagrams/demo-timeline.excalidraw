@@ -741,13 +741,13 @@
       "updated": 1795352785900,
       "link": null,
       "locked": false,
-      "text": "승인 · 해소\n\n당직자 승인 → 드라이런 실행\nname=NONE → RESOLVED",
+      "text": "승인 · 해소\n\n담당 팀원 승인 → 드라이런 실행\nname=NONE → RESOLVED",
       "fontSize": 16,
       "fontFamily": 5,
       "textAlign": "center",
       "verticalAlign": "middle",
       "containerId": "s5",
-      "originalText": "승인 · 해소\n\n당직자 승인 → 드라이런 실행\nname=NONE → RESOLVED",
+      "originalText": "승인 · 해소\n\n담당 팀원 승인 → 드라이런 실행\nname=NONE → RESOLVED",
       "autoResize": true,
       "lineHeight": 1.25
     }
